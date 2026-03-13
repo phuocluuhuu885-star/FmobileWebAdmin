@@ -24,12 +24,8 @@ function getItem(label, key, icon, children) {
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const token = Cookies.get("token");
 
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
+
 
   const itemMenu = [
     getItem(<Link to="/">Trang chủ</Link>, "/", <HomeIcon className="w-5 h-5" />),
@@ -48,8 +44,42 @@ const App = () => {
     ]),
   ];
 
+   const {
+    token: { colorBgContainer },
+  } = theme.useToken();
+  const navigate = useNavigate();
   // Check login + token expiration
+  const token = Cookies.get("token");
+  useEffect(() => {
+    const checkTokenExpiration = () => {
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const currentTime = Math.floor(Date.now() / 1000); // current time in seconds
+        if (decodedToken.exp && decodedToken.exp < currentTime) {
+          // Token has expired, redirect to the login page
+          Cookies.remove("token");
+          notification.error({
+            message: "Token Expired",
+            description: "Your session has expired. Please log in again.",
+            duration: 3,
+          }); // Clear the expired token
+          navigate("/login");
+        }
+      } else {
+        navigate("/login");
+      }
+    };
 
+    checkTokenExpiration(); // Check token expiration on initial render
+
+    // Check token expiration on every route change
+    const unlisten = navigate(checkTokenExpiration);
+
+     return () => {
+      unlisten; // Cleanup the listener when the component is unmounted
+    };
+  }, [token, navigate]);
+  
   // Fetch dữ liệu ban đầu (profile + danh mục, sản phẩm, khách hàng...)
   useEffect(() => {
   const token = Cookies.get("token");

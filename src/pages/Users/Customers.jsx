@@ -6,10 +6,7 @@ import { BrowserRouter as Router, Link, Route } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
 // import CustomersInvoice from "./CustomersInvoice";
-// import CustomersInvoice from "./CustomersInvoice";
-// import CustomersInvoice from "./CustomersInvoice";
-// import CustomersInvoice from "./CustomersInvoice";
-// import CustomersInvoice from "./CustomersInvoice";
+
 
 const Customers = () => {
   const dispatch = useDispatch();
