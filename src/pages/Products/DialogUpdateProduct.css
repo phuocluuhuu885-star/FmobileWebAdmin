@@ -1,0 +1,23 @@
+/* DialogUpdateProduct.css */
+
+/* Target the scrollbar in the modal */
+.ant-modal-body::-webkit-scrollbar {
+    width: 8px; /* Set the width of the scrollbar */
+  }
+  
+  /* Handle on hover */
+  .ant-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  /* Set the color of the scrollbar handle */
+  .ant-modal-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px; /* Set the border radius of the scrollbar handle */
+  }
+  
+  /* Set the color of the scrollbar track */
+  .ant-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  

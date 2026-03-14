@@ -6,14 +6,19 @@ import {
   Squares2X2Icon,
   UserGroupIcon,
   ClipboardDocumentListIcon,
-} from "@heroicons/react/24/solid";
+}  from "@heroicons/react/24/solid";
+import "./App.css";
 import SideBar from "./components/SideBar";
 import HeaderBar from "./components/HeaderBar";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import { fetchMyProfileRequest } from "./redux/actions/MyProfile";
+import { fetchCategoryRequest } from "./redux/actions/Category";
+import { fetchStoreRequest } from "./redux/actions/Store";
+import { fetchProductRequest } from "./redux/actions/Product";
 import { fetchCustomerRequest } from "./redux/actions/Customer";
+import { fetchBannerRequest } from "./redux/actions/Banner";
 
 const { Content } = Layout;
 
@@ -93,9 +98,33 @@ const App = () => {
   }
 }, [dispatch]);
 
+
+
+    useEffect(() => {
+    dispatch(fetchCategoryRequest());
+  }, []);
+    useEffect(() => {
+    dispatch(fetchStoreRequest(token));
+  }, []);
+
   useEffect(() => {
     dispatch(fetchCustomerRequest("customer", token));
   }, []);
+  
+  useEffect(() => {
+    dispatch(fetchProductRequest());
+  }, []);
+
+   useEffect(() => {
+    dispatch(fetchBannerRequest());
+  }, []);
+
+
+
+
+
+
+
 
   return (
     <Layout className="h-[100vh]">
