@@ -426,7 +426,7 @@ const DetailContent = ({ data, close }) => {
                   />
                   <div className="flex flex-col ml-2">
                     <Typography.Text className="text-base text-black font-semibold">
-                      {product.option_id.product_id.name} -{" "}
+                      {product.option_id?.product_id?.name} -{" "}
                       {
     product.option_id.price.toLocaleString("vi-VN") 
   } đ
