@@ -6,7 +6,7 @@ import {
   Squares2X2Icon,
   UserGroupIcon,
   ClipboardDocumentListIcon,
-}  from "@heroicons/react/24/solid";
+} from "@heroicons/react/24/solid";
 import "./App.css";
 import SideBar from "./components/SideBar";
 import HeaderBar from "./components/HeaderBar";
@@ -16,9 +16,12 @@ import Cookies from "js-cookie";
 import { fetchMyProfileRequest } from "./redux/actions/MyProfile";
 import { fetchCategoryRequest } from "./redux/actions/Category";
 import { fetchStoreRequest } from "./redux/actions/Store";
+import { fetchStaffRequest } from "./redux/actions/Staff";
 import { fetchProductRequest } from "./redux/actions/Product";
 import { fetchCustomerRequest } from "./redux/actions/Customer";
 import { fetchBannerRequest } from "./redux/actions/Banner";
+import { fetchInvoiceRequest } from "./redux/actions/Invoice";
+
 
 const { Content } = Layout;
 
@@ -49,7 +52,7 @@ const App = () => {
     ]),
   ];
 
-   const {
+  const {
     token: { colorBgContainer },
   } = theme.useToken();
   const navigate = useNavigate();
@@ -80,50 +83,54 @@ const App = () => {
     // Check token expiration on every route change
     const unlisten = navigate(checkTokenExpiration);
 
-     return () => {
+    return () => {
       unlisten; // Cleanup the listener when the component is unmounted
     };
   }, [token, navigate]);
-  
+
   // Fetch dữ liệu ban đầu (profile + danh mục, sản phẩm, khách hàng...)
   useEffect(() => {
-  const token = Cookies.get("token");
-  if (!token) return;
+    const token = Cookies.get("token");
+    if (!token) return;
 
-  try {
-    const decoded = jwtDecode(token);
-    dispatch(fetchMyProfileRequest(decoded.userId, token));
-  } catch (e) {
-    // ignore
-  }
-}, [dispatch]);
+    try {
+      const decoded = jwtDecode(token);
+      dispatch(fetchMyProfileRequest(decoded.userId, token));
+    } catch (e) {
+      // ignore
+    }
+  }, [dispatch]);
 
 
 
-    useEffect(() => {
+  useEffect(() => {
     dispatch(fetchCategoryRequest());
   }, []);
-    useEffect(() => {
+  useEffect(() => {
     dispatch(fetchStoreRequest(token));
   }, []);
 
   useEffect(() => {
     dispatch(fetchCustomerRequest("customer", token));
   }, []);
-  
+
+  useEffect(() => {
+    dispatch(fetchStaffRequest("staff", token));
+  }, []);
+
   useEffect(() => {
     dispatch(fetchProductRequest());
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     dispatch(fetchBannerRequest());
   }, []);
 
-
-
-
-
-
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchInvoiceRequest(token));
+    }
+  }, []);
 
 
   return (
