@@ -146,9 +146,10 @@ const Home = () => {
     setLoadingTop10Product(true);
 
     const url = `http://localhost:3000/api/statistical/get-top-products-by-sold-quantity`;
-     const params = {};
-    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
-    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
+    const params = {
+      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
+      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
+    };
 
     axios
       .get(url, { params })
@@ -166,10 +167,9 @@ const Home = () => {
     setLoadingTopUserByProduct(true);
 
     const url = `http://localhost:3000/api/statistical/get-top-users-by-sold-quantity`;
-    const params = {
-      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
-      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
-    };
+    const params = {};
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     axios
       .get(url, { params })

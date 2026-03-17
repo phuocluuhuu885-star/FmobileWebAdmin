@@ -187,15 +187,24 @@ const Products = () => {
       key: "update",
       render: (record) => {
         return (
-          <Button
-            onClick={() => {
-              setSelectedProduct(record._id);
-              dispatch(fetchProductDetailRequest(record._id));
-              setOpenDialogEditProduct(true);
-            }}
-          >
-            Sửa
-          </Button>
+          <Flex gap={8} wrap="wrap">
+            <Button
+              onClick={() => {
+                navigate(`/products/${record._id}`);
+              }}
+            >
+              Xem
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedProduct(record._id);
+                dispatch(fetchProductDetailRequest(record._id));
+                setOpenDialogEditProduct(true);
+              }}
+            >
+              Sửa
+            </Button>
+          </Flex>
         );
       },
     },
@@ -470,25 +479,23 @@ const DialogUpateProduct = ({ productId, open, close }) => {
       component: (
         <Select
           size="middle"
-          labelInValue={data?.result.category_id.name}
           placeholder="Chọn loại sản phẩm"
           options={dataCategory?.data.map((category) => ({
             label: category.name,
             value: category._id,
           }))}
-          onChange={(value) => setSelectedCategory(value)}
         />
       ),
     },
     {
       label: "Trạng thái sản phẩm",
       name: "status",
-      rules: [{ required: true, message: "Chọn trạng thái sản phẩm" }],
+      rules: [{ required: true, message: "Nhập trạng thái sản phẩm" }],
       component: (
-        <Select size="middle" placeholder="Chọn trạng thái sản phẩm">
-          <Select.Option value="mới">Mới</Select.Option>
-          <Select.Option value="cũ">Cũ</Select.Option>
-        </Select>
+        <Input
+          size="middle"
+          placeholder="Nhập trạng thái sản phẩm (ví dụ: mới/cũ/like new...)"
+        />
       ),
     },
     {
@@ -500,118 +507,16 @@ const DialogUpateProduct = ({ productId, open, close }) => {
       ),
     },
     {
-      label: "Thông tin màn hình",
-      name: "screen",
-      component: (
-        <Input.TextArea
-          rows={5}
-          size="middle"
-          placeholder="Thông tin màn hình sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin camera",
-      name: "camera",
-      component: (
-        <Input.TextArea
-          rows={5}
-          size="middle"
-          placeholder="Thông tin camera sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin chipset",
-      name: "chipset",
-      component: (
-        <Input size="middle" placeholder="Thông tin chipset sản phẩm" />
-      ),
-    },
-    {
-      label: "Thông tin cpu",
-      name: "cpu",
-      component: <Input size="middle" placeholder="Thông tin cpu sản phẩm" />,
-    },
-    {
-      label: "Thông tin gpu",
-      name: "gpu",
-      component: <Input size="middle" placeholder="Thông tin gpu sản phẩm" />,
-    },
-    {
-      label: "Thông tin rom",
-      name: "rom",
-      component: (
-        <InputNumber size="middle" placeholder="Thông tin rom sản phẩm" />
-      ),
-    },
-    {
-      label: "Thông tin ram",
-      name: "ram",
-      component: (
-        <InputNumber size="middle" placeholder="Thông tin ram sản phẩm" />
-      ),
-    },
-    {
       label: "Hệ điều hành sản phẩm",
       name: "operatingSystem",
       rules: [{ required: true, message: "Chọn hệ điều hành sản phẩm" }],
       component: (
-        <Select
-          size="middle"
-          placeholder="Chọn hệ điều hành sản phẩm"
-          labelInValue={data?.result.operatingSystem}
-        >
+         <Select size="middle" placeholder="Chọn hệ điều hành sản phẩm">
           <Select.Option value="Android">Android</Select.Option>
           <Select.Option value="IOS">IOS</Select.Option>
           <Select.Option value="Window">Window</Select.Option>
           <Select.Option value="MacOs">MacOs</Select.Option>
         </Select>
-      ),
-    },
-    {
-      label: "Thông tin pin",
-      name: "battery",
-      component: <Input size="middle" placeholder="Thông tin pin sản phẩm" />,
-    },
-    {
-      label: "Thông tin cân nặng",
-      name: "weight",
-      component: (
-        <InputNumber size="middle" placeholder="Thông tin cân nặng sản phẩm" />
-      ),
-    },
-    {
-      label: "Thông tin kết nối",
-      name: "connection",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          placeholder="Thông tin kết nối của sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Tính năng đặc biệt",
-      name: "specialFeature",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          placeholder="Thông tin tính năng đặc biệt của sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin khác",
-      name: "other",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          placeholder="Thông tin khác của sản phẩm"
-        />
       ),
     },
   ];
@@ -644,19 +549,7 @@ const DialogUpateProduct = ({ productId, open, close }) => {
           category_id: data ? data?.result.category_id._id : undefined,
           status: data ? data?.result.status : undefined,
           description: data ? data?.result.description : "",
-          screen: data ? data?.result.screen : "",
-          camera: data ? data?.result.camera : "",
-          chipset: data ? data?.result.chipset : "",
-          cpu: data ? data?.result.cpu : "",
-          gpu: data ? data?.result.gpu : "",
-          rom: data ? data?.result.rom : undefined,
-          ram: data ? data?.result.ram : undefined,
           operatingSystem: data ? data?.result.operatingSystem : undefined,
-          battery: data ? data?.result.battery : "",
-          weight: data ? data?.result.weight : undefined,
-          connection: data ? data?.result.connection : "",
-          specialFeature: data ? data?.result.specialFeature : "",
-          other: data ? data?.result.other : "",
         }}
       >
         {renderFormItems(formItems)}

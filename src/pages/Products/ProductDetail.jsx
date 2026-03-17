@@ -430,7 +430,8 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     fromData.append("name_color", value.name_color);
     fromData.append("product_id", productId);
     fromData.append("price", value.price);
-    fromData.append("discount_value", value.discount_value);
+    // Ẩn giảm giá trên UI, mặc định gửi 0
+    fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity);
     fromData.append("hot_option", check);
     switch (method) {
@@ -561,21 +562,10 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           >
             <InputNumber
               min={0}
+              precision={0}
+              step={1000}
+              parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
               placeholder="nhập giá tiền của option sản phẩm"
-              size="middle"
-              className="w-full"
-            />
-          </Form.Item>
-          <Form.Item
-            label={"Giảm giá (theo %)"}
-            name={"discount_value"}
-            initialValue={data ? data.discount_value : 0}
-          >
-            <InputNumber
-              type="number"
-              min={0}
-              max={50}
-              placeholder="nhập phần trăm giảm giá của option sản phẩm"
               size="middle"
               className="w-full"
             />
@@ -587,6 +577,9 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           >
             <InputNumber
               min={0}
+              precision={0}
+              step={1000}
+              parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
               placeholder="nhập số lượng của option sản phẩm"
               size="middle"
               className="w-full"

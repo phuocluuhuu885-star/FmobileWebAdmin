@@ -108,16 +108,13 @@ const CreateNewProduct = () => {
     {
       label: "Trạng thái sản phẩm",
       name: "status",
-      rules: [{ required: true, message: "Chọn trạng thái sản phẩm" }],
+      rules: [{ required: true, message: "Nhập trạng thái sản phẩm" }],
       component: (
-        <Select
-          style={{ width: "50%" }}
+        <Input
           size="middle"
-          placeholder="Chọn trạng thái sản phẩm"
-        >
-          <Select.Option value="mới">Mới</Select.Option>
-          <Select.Option value="cũ">Cũ</Select.Option>
-        </Select>
+           className="w-[50%]"
+          placeholder="Nhập trạng thái sản phẩm (ví dụ: mới/cũ/like new...)"
+        />
       ),
     },
     {
@@ -130,85 +127,6 @@ const CreateNewProduct = () => {
           size="middle"
           className="w-[70%]"
           placeholder="Mô tả sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin màn hình",
-      name: "screen",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin màn hình sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin camera",
-      name: "camera",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin camera sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin chipset",
-      name: "chipset",
-      component: (
-        <Input
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin chipset sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin cpu",
-      name: "cpu",
-      component: (
-        <Input
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin cpu sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin gpu",
-      name: "gpu",
-      component: (
-        <Input
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin gpu sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin rom",
-      name: "rom",
-      component: (
-        <InputNumber
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin rom sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin ram",
-      name: "ram",
-      component: (
-        <InputNumber
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin ram sản phẩm"
         />
       ),
     },
@@ -227,64 +145,6 @@ const CreateNewProduct = () => {
           <Select.Option value="Window">Window</Select.Option>
           <Select.Option value="MacOs">MacOs</Select.Option>
         </Select>
-      ),
-    },
-    {
-      label: "Thông tin pin",
-      name: "battery",
-      component: (
-        <Input
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin pin sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin cân nặng",
-      name: "weight",
-      component: (
-        <InputNumber
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin cân nặng sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin kết nối",
-      name: "connection",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin kết nối của sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Tính năng đặc biệt",
-      name: "specialFeature",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin tính năng đặc biệt của sản phẩm"
-        />
-      ),
-    },
-    {
-      label: "Thông tin khác",
-      name: "other",
-      component: (
-        <Input.TextArea
-          rows={2}
-          size="middle"
-          className="w-[50%]"
-          placeholder="Thông tin khác của sản phẩm"
-        />
       ),
     },
   ];

@@ -24,7 +24,8 @@ const CreateNewOption = ({ productId }) => {
     fromData.append("name_color", value.name_color ?? "");
     fromData.append("product_id", productId);
     fromData.append("price", value.price ?? 0);
-    fromData.append("discount_value", value.discount_value ?? 0);
+    // Ẩn giảm giá trên UI, mặc định gửi 0
+    fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity ?? 0);
     fromData.append("hot_option", value.hot_option ?? false);
     axios
@@ -98,16 +99,10 @@ const CreateNewOption = ({ productId }) => {
           <Form.Item label={"giá tiền"} name={"price"}>
             <InputNumber
               min={0}
+              precision={0}
+              step={1000}
+              parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
               placeholder="nhập giá tiền của option sản phẩm"
-              size="middle"
-              className="w-[50%]"
-            />
-          </Form.Item>
-          <Form.Item label={"Giảm giá (theo %)"} name={"discount_value"}>
-            <InputNumber
-              min={0}
-              max={50}
-              placeholder="nhập phần trăm giảm giá của option sản phẩm"
               size="middle"
               className="w-[50%]"
             />
@@ -115,6 +110,9 @@ const CreateNewOption = ({ productId }) => {
           <Form.Item label={"Số lượng"} name={"quantity"}>
             <InputNumber
               min={0}
+              precision={0}
+              step={1}
+              parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
               placeholder="nhập số lượng của option sản phẩm"
               size="middle"
               className="w-[50%]"
