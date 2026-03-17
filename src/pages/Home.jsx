@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import "./home.css";
 import Cookies from "js-cookie";
-import { Card, Col, Flex, Row, Statistic, Table, Typography } from "antd";
+import { Card, Col, Flex, Row, Statistic, Table, Typography, Empty } from "antd";
 import CountUp from "react-countup";
 import { Button, DatePicker, Input, Space } from 'antd';
 import axios from "axios";
@@ -72,10 +72,9 @@ const Home = () => {
     setLoadingTopleteastSellingProducts(true);
 
     const url = `http://localhost:3000/api/statistical/get-top-least-selling-products`;
-    const params = {
-      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
-      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
-    };
+     const params = {};
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     axios
       .get(url, { params })
@@ -91,10 +90,9 @@ const Home = () => {
   //------------Tổng doanh thu-----------
   useEffect(() => {
     const url = `${import.meta.env.VITE_BASE_URL}statistical/get-total-revenue`;
-    const params = {
-      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
-      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
-    };
+     const params = {};
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     axios
       .get(url, { params })
@@ -109,10 +107,9 @@ const Home = () => {
   //----------Tổng đơn thành công--------------
   useEffect(() => {
     const url = `${import.meta.env.VITE_BASE_URL}statistical/get-successful-orders`;
-    const params = {
-      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
-      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
-    };
+     const params = {};
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     axios
       .get(url, { params })
@@ -129,10 +126,9 @@ const Home = () => {
     setLoadingTop5Product(true);
 
     const url = `${import.meta.env.VITE_BASE_URL}statistical/get-top-product-by-revenue`;
-    const params = {
-      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
-      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
-    };
+     const params = {};
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     axios
       .get(url, { params })
@@ -150,10 +146,9 @@ const Home = () => {
     setLoadingTop10Product(true);
 
     const url = `http://localhost:3000/api/statistical/get-top-products-by-sold-quantity`;
-    const params = {
-      startDate: startDate ? startDate.format('YYYY-MM-DD') : '',
-      endDate: endDate ? endDate.format('YYYY-MM-DD') : '',
-    };
+     const params = {};
+    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
 
     axios
       .get(url, { params })
