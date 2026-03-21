@@ -179,9 +179,6 @@ const ProductDetail = () => {
                     <Text className="text-base">
                       Số lượng đã bán: {option.soldQuantity}
                     </Text>
-                    <Text className="text-base">
-                      Giảm giá: {option.discount_value}%
-                    </Text>
                   </div>
                   {option.hot_option ? (
                     <img
@@ -243,6 +240,7 @@ const ProductDetail = () => {
           <button
             onClick={() => {
               setOptionSelected(null);
+              dispatch(setSelectedOption(null));
               setApi(`${import.meta.env.VITE_BASE_URL}products/create-option`);
               setApiMethod("add");
               setOpenDialogOption(true);
@@ -419,11 +417,34 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     (state) => state.selectedOptionReducer.selectedOption
   );
 
+  useEffect(() => {
+    if (!open) return;
+
+    if (method === "update" && data) {
+      form.setFieldsValue({
+        name_color: data.name_color ?? "",
+        price: data.price ?? 0,
+        quantity: data.quantity ?? 0,
+        hot_option: Boolean(data.hot_option),
+      });
+    } else {
+      // Khi thêm option mới, luôn clear dữ liệu option cũ.
+      form.resetFields();
+      form.setFieldsValue({
+        name_color: "",
+        price: 0,
+        quantity: 0,
+        hot_option: false,
+      });
+      setImage(null);
+    }
+  }, [open, method, data, form]);
+  
   const handleFinish = (value) => {
     console.log("value: ", value);
     console.log("image: ", image);
     const fromData = new FormData();
-    const check = value.hot_option == undefined || null ? false : true;
+    const hotOption = Boolean(value.hot_option);
     if (image) {
       fromData.append("image", image);
     }
@@ -433,7 +454,7 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity);
-    fromData.append("hot_option", check);
+    fromData.append("hot_option", hotOption ? "true" : "false");
     switch (method) {
       case "add":
         console.log("b");

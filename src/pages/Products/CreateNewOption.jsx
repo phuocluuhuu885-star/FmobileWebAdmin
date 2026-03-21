@@ -18,6 +18,7 @@ const CreateNewOption = ({ productId }) => {
   const handleFinish = (value) => {
     console.log({ ...value, productId });
     const fromData = new FormData();
+    const hotOption = Boolean(value.hot_option);
     if (image) {
       fromData.append("image", image);
     }
@@ -27,7 +28,7 @@ const CreateNewOption = ({ productId }) => {
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity ?? 0);
-    fromData.append("hot_option", value.hot_option ?? false);
+    fromData.append("hot_option", hotOption ? "true" : "false");
     axios
       .post(
         `${import.meta.env.VITE_BASE_URL}products/create-option`,
