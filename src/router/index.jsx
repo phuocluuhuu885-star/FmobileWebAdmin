@@ -14,6 +14,7 @@ import Category from "../pages/Products/Category";
 import Invoice from "../pages/invoice/Invoice";
 import CreateNewProduct from "../pages/Products/CreateNewProduct";
 import EditProduct from "../pages/Products/editProduct";
+import OrderDetail from "../pages/Detail_Order/OrderDetail";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: "/chart/product", element: <ProductsChart /> },
       { path: "/chart/store", element: <StoreChart /> },
       { path: "/invoice", element: <Invoice /> },
+      { path: "/invoice/detail", element: <OrderDetail /> },
 
     ],
   },
