@@ -12,7 +12,7 @@ const ShowReviewsModal = ({ productId, onClose }) => {
         const response = await axios.get(`http://localhost:3000/api/review/${productId}`);
         setReviews(response.data.data);
       } catch (error) {
-        console.error("Lỗi khi lấy đánh giá:", error);
+        // Error fetching reviews
       }
     };
 

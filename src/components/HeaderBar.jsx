@@ -24,7 +24,6 @@ import Cookies from "js-cookie";
 import moment from "moment";
 
 const HeaderBar = ({ toggleMenu, collapsed }) => {
-  const [count, setCount] = useState(0);
   const [openDialogChangePassword, setOpenDialogChangePassword] =
     useState(false);
   const [openDialogChangeProfile, setOpenDialogChangeProfile] = useState(false);
@@ -123,8 +122,6 @@ const DialogChangeProfile = ({ visible, data, onCancel }) => {
   const token = Cookies.get("token");
 
   const handleFinish = (values) => {
-    console.log("Form values:", values);
-
     const { username, birthday, full_name } = values;
 
     const formattedBirthday = moment(birthday);
@@ -154,8 +151,7 @@ const DialogChangeProfile = ({ visible, data, onCancel }) => {
         form.resetFields();
         onCancel();
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         notification.error({
           error: "Thất Bại",
           description: "Cập nhật thông tin cá nhân thất bại!",

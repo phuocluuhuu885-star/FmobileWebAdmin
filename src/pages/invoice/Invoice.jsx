@@ -28,7 +28,6 @@ const Invoice = () => {
   const navigate = useNavigate();
 
   const showModelDetail = (item) => {
-    console.log(item);
     navigate('/invoice/detail', { state: { invoice: item } });
   };
 
@@ -44,41 +43,14 @@ const Invoice = () => {
       dataIndex: "_id",
       key: "id",
     },
-    // {
-    //   title: "Sản phẩm",
-    //   dataIndex: "productsOrder",
-    //   key: "nameProduct",
-    //   width: "30%",
-    //   render: (record) => {
-    //     return (
-    //       <div>
-    //         {record?.map((product, index) => (
-    //           <div
-    //             key={index}
-    //             className={`flex flex-row p-1  items-center ${index !== 0 ? "border-t" : ""
-    //               } ${index !== record.length - 1 ? "border-b" : ""}`}
-    //           >
-    //             <Avatar src={product.option_id.image} className="mr-1" />
-    //             <Typography className="w-[80%]">
-    //               {product.option_id.product_id?.name}
-    //             </Typography>
-    //             <Typography>Số lượng: {product.quantity}</Typography>
-    //           </div>
-    //         ))}
-    //       </div>
-    //     );
-    //   },
-    // },
     {
       title: "Tên người đặt",
       dataIndex: "info_id",
       key: "nameUser",
       sorter: (a, b) => {
-        console.log(a, b);
         return;
       },
       render: (record) => {
-        console.log(record);
         return <div>{record?.name}</div>;
       },
     },

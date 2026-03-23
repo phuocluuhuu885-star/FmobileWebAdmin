@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm, Select, Modal } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
@@ -51,7 +51,6 @@ const OrderDetail = () => {
     })),
   });
   const [noteInput, setNoteInput] = useState('');
-  const [editingStartAt] = useState(new Date().toISOString());
   const [auditLogs, setAuditLogs] = useState(data.admin_update_logs || []);
   const [isSaving, setIsSaving] = useState(false);
   const [shippers, setShippers] = useState([]);
@@ -84,8 +83,8 @@ const OrderDetail = () => {
       .then((res) => {
         setShippers(res?.data?.result || []);
       })
-      .catch((err) => {
-        console.log('Lỗi lấy danh sách shipper', err);
+      .catch(() => {
+        // Lỗi lấy danh sách shipper
       });
   };
 
@@ -118,7 +117,6 @@ const OrderDetail = () => {
         duration: 3,
       });
     } catch (err) {
-      console.log(err);
       notification.error({
         message: 'Thất bại',
         description: err?.response?.data?.message || 'Không thể tạo shipper',
@@ -164,10 +162,11 @@ const OrderDetail = () => {
               navigate('/invoice');
             }
           })
-          .catch((err) => console.log('Lỗi notifi', err));
+          .catch(() => {
+            // Error updating notification
+          });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch(() => {
         notification.error({
           message: 'Thất bại',
           description: 'Cập nhật trạng thái đơn hàng thất bại',

@@ -34,7 +34,6 @@ const { Title, Paragraph, Text } = Typography;
 
 const ProductDetail = () => {
   const { id } = useParams();
-  // const [data, setData] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [openDialogOption, setOpenDialogOption] = useState(false);
   const [api, setApi] = useState(null);
@@ -79,8 +78,7 @@ const ProductDetail = () => {
           type: "success",
         });
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         notification.error({
           error: "error",
           description: "Change active  failed",
@@ -153,7 +151,6 @@ const ProductDetail = () => {
                   onClick={() => {
                     setApiMethod("update");
                     dispatch(setSelectedOption(option));
-                    console.log(option);
                     setApi(
                       `${import.meta.env.VITE_BASE_URL}products/update-option/${
                         option._id
@@ -219,8 +216,7 @@ const ProductDetail = () => {
                               type: "success",
                             });
                           })
-                          .catch((err) => {
-                            console.log(err);
+                          .catch(() => {
                             notification.error({
                               error: "error",
                               description: "Xóa option thất bại!",
@@ -441,8 +437,6 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
   }, [open, method, data, form]);
   
   const handleFinish = (value) => {
-    console.log("value: ", value);
-    console.log("image: ", image);
     const fromData = new FormData();
     const hotOption = Boolean(value.hot_option);
     if (image) {
@@ -457,7 +451,6 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     fromData.append("hot_option", hotOption ? "true" : "false");
     switch (method) {
       case "add":
-        console.log("b");
         axios
           .post(urlApi, fromData, {
             headers: { Authorization: `Bearer ${token}` },
@@ -486,7 +479,6 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           });
         break;
       case "update":
-        console.log("a");
         setLoading(true);
         axios
           .put(urlApi, fromData, {
@@ -517,7 +509,6 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           });
         break;
       default:
-        console.log("c");
         return null;
     }
   };

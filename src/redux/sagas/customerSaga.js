@@ -16,7 +16,6 @@ function* fetchCustomer(action) {
     );
     yield put(fetchCustomerSuccess(response.data));
   } catch (error) {
-    console.log("fetch customer fail - customer saga: ", error);
     if (error.response) {
       const response = error.response;
       const errorData = response.data;

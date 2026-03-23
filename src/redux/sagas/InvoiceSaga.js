@@ -16,7 +16,6 @@ function* fetchInvoice(action) {
     );
     yield put(fetchInvoiceSuccess(response.data));
   } catch (error) {
-    console.log("fetch invoice fail - invoice saga: ", error);
     if (error.response) {
       const response = error.response;
       const errorData = response.data;

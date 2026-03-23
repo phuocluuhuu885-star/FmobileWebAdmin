@@ -67,8 +67,7 @@ const Banner = () => {
                           type: "success",
                         });
                       })
-                      .catch((error) => {
-                        console.log(error);
+                      .catch(() => {
                         notification.error({
                           error: "Thất Bại",
                           description: "Xóa quảng cáo thất bại!",

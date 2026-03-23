@@ -16,7 +16,6 @@ const CreateNewOption = ({ productId }) => {
   const [image, setImage] = useState(null);
   const token = Cookies.get("token");
   const handleFinish = (value) => {
-    console.log({ ...value, productId });
     const fromData = new FormData();
     const hotOption = Boolean(value.hot_option);
     if (image) {
@@ -46,8 +45,7 @@ const CreateNewOption = ({ productId }) => {
           type: "success",
         });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch(() => {
         notification.error({
           error: "error",
           description: "Tạo option thất bại!",

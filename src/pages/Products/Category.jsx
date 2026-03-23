@@ -123,13 +123,11 @@ const DialogFormCategory = ({ open, onClose, data, urlApi, method }) => {
   }, [data]);
 
   const handleFinish = (value) => {
-    console.log(value.name);
     const formData = new FormData();
     formData.append("image", image);
     formData.append("name", value.name);
     switch (method) {
       case "add":
-        console.log("b");
         setLoading(true);
         axios
           .post(urlApi, formData, {
@@ -158,7 +156,6 @@ const DialogFormCategory = ({ open, onClose, data, urlApi, method }) => {
           });
         break;
       case "update":
-        console.log("a");
         setLoading(true);
         axios
           .put(urlApi, formData, {
@@ -187,7 +184,6 @@ const DialogFormCategory = ({ open, onClose, data, urlApi, method }) => {
           });
         break;
       default:
-        console.log("c");
         return null;
     }
   };

@@ -29,14 +29,12 @@ const CreateNewProduct = () => {
   const dataCategory = useSelector((state) => state.categoryReducer.data);
 
   const handleFinish = (values) => {
-    console.log(values);
     axios
       .post(`${import.meta.env.VITE_BASE_URL}products/create-product`, values, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
         setCreateProductSuccess(true);
-        console.log(res.data.result);
         setProductID(res.data.result);
         notification.success({
           message: "success",
@@ -45,8 +43,7 @@ const CreateNewProduct = () => {
           type: "success",
         });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch(() => {
         notification.error({
           error: "error",
           description: "Tạo sản phẩm thất bại!",

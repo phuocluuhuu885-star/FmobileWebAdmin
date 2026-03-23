@@ -51,21 +51,6 @@ const Home = () => {
   const [endDate, setEndDate] = useState(null);
   const [totalRevenue, setTotalRevenue] = useState(null);
   const [ordersSuccessfully, setOrdersSuccessfully] = useState(null);
-  // useEffect(() => {
-  //   setLoadingTop5Product(true);
-  //   axios
-  //     .get(
-  //       `${import.meta.env.VITE_BASE_URL}statistical/get-top-product-by-revenue`
-  //     )
-  //     .then((response) => {
-  //       setLoadingTop5Product(false);
-  //       setTop5Product(response.data);
-  //     })
-  //     .catch((e) => {
-  //       setLoadingTop5Product(false);
-  //       console.log(e);
-  //     });
-  // }, []);
   
   //---------Top sản phẩm bán ít-------------
   useEffect(() => {
@@ -82,9 +67,8 @@ const Home = () => {
         setLoadingTopleteastSellingProducts(false);
         setTopLeastSellingProducts(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         setLoadingTopleteastSellingProducts(false);
-        console.log(error);
       });
   }, [startDate, endDate]);
   //------------Tổng doanh thu-----------
@@ -99,25 +83,9 @@ const Home = () => {
       .then((response) => {
         setTotalRevenue(response.data.data.totalRevenue);
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
+        // Error fetching total revenue
       });
-  }, [startDate, endDate]);
-
-  //----------Tổng đơn thành công--------------
-  useEffect(() => {
-    const url = `${import.meta.env.VITE_BASE_URL}statistical/get-successful-orders`;
-     const params = {};
-    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
-    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
-
-    axios
-      .get(url, { params })
-      .then((response) => {
-        setOrdersSuccessfully(response.data.data.successfulOrders);
-      })
-      .catch((error) => {
-        console.log(error);
       });
   }, [startDate, endDate]);
 
@@ -136,9 +104,8 @@ const Home = () => {
         setLoadingTop5Product(false);
         setTop5Product(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         setLoadingTop5Product(false);
-        console.log(error);
       });
   }, [startDate, endDate]);
 
@@ -157,9 +124,8 @@ const Home = () => {
         setLoadingTop10Product(false);
         setTop10ProductSelling(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         setLoadingTop10Product(false);
-        console.log(error);
       });
   }, [startDate, endDate]);
 
@@ -177,9 +143,8 @@ const Home = () => {
         setLoadingTopUserByProduct(false);
         setTop5UserByProduct(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         setLoadingTopUserByProduct(false);
-        console.log(error);
       });
   }, [startDate, endDate]);
 
@@ -195,9 +160,8 @@ const Home = () => {
         setLoadingTopStore(false);
         setTopStore(response.data);
       })
-      .catch((e) => {
+      .catch(() => {
         setLoadingTopStore(false);
-        console.log(e);
       });
   }, []);
 
@@ -335,14 +299,6 @@ const Home = () => {
           loading={loadingInvoice}
         />
       </Card>
-        {/* <Card bordered size="default" className="shadow-md m-3">
-          <Statistic
-            title="Cửa hàng kích hoạt"
-            value={dataStore ? dataStore?.data.length : 0}
-            formatter={formatter}
-            loading={loadingStore}
-          />
-        </Card> */}
         <Card bordered size="default" className="shadow-md  m-3">
           <Statistic
             title="Sản phẩm hiện có"

@@ -25,10 +25,6 @@ const Staffs = () => {
   const [pageSize, setPageSize] = useState(10);
   const [openDialogAddStaff, setOpenDialogAddStaff] = useState(false);
 
-  // useEffect(() => {
-  //   dispatch(fetchStaffRequest("staff", token));
-  //   console.log(data);
-  // }, [dispatch]);
   const columns = [
     {
       title: "STT",
@@ -161,7 +157,6 @@ const DialogAddStaff = ({ visible, onCancel }) => {
   const [confirmPassword, setConfirmPassword] = useState();
   const dispatch = useDispatch();
   const handleFinish = () => {
-    console.log(token);
     axios
       .post(
         `${import.meta.env.VITE_BASE_URL}user/create-staff`,

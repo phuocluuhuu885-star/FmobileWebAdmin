@@ -33,7 +33,7 @@ const EditProduct = () => {
         `${import.meta.env.VITE_BASE_URL}products/detail-product/${id}`
       );
     }
-    console.log(data);
+
   }, [id]);
 
   const handleFinish = (values) => {};

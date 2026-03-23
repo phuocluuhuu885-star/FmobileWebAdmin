@@ -5,8 +5,6 @@ import { Avatar, Modal, Pagination, Table, notification } from "antd";
 import { BrowserRouter as Router, Link, Route } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
-// import CustomersInvoice from "./CustomersInvoice";
-
 
 const Customers = () => {
   const dispatch = useDispatch();
@@ -16,10 +14,6 @@ const Customers = () => {
   const token = Cookies.get("token");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  // useEffect(() => {
-  //   const token = Cookies.get("token");
-  //   dispatch(fetchCustomerRequest("customer", token));
-  // }, [dispatch, currentPage, pageSize]);
 
   const columns = [
     {
@@ -118,11 +112,6 @@ const Customers = () => {
     },
   ];
 
-  // const handleTableChange = (pagination, filters, sorter) => {
-  //   setCurrentPage(pagination.current);
-  //   setPageSize(pagination.pageSize);
-  // };
-
   return (
       <div>
         <Table
@@ -130,12 +119,6 @@ const Customers = () => {
           columns={columns}
           loading={loading}
           bordered
-          // pagination={{
-          //   current: currentPage,
-          //   pageSize: pageSize,
-          //   total: data ? data.totalPages : 0,
-          // }}
-          // onChange={handleTableChange}
           rowKey={(record) => record._id}
         />
          {/* Thêm Route cho trang khách hàng */}
