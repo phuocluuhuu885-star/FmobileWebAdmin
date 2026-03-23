@@ -12,6 +12,7 @@ import Banner from "./../pages/Products/Banner";
 import ProductDetail from "../pages/Products/ProductDetail";
 import Category from "../pages/Products/Category";
 import Invoice from "../pages/invoice/Invoice";
+import Voucher from "../pages/Voucher/Voucher";
 import CreateNewProduct from "../pages/Products/CreateNewProduct";
 import EditProduct from "../pages/Products/editProduct";
 import OrderDetail from "../pages/Detail_Order/OrderDetail";
@@ -32,7 +33,9 @@ export const router = createBrowserRouter([
       { path: "/chart/product", element: <ProductsChart /> },
       { path: "/chart/store", element: <StoreChart /> },
       { path: "/invoice", element: <Invoice /> },
+      { path: "/vouchers", element: <Voucher /> },
       { path: "/invoice/detail", element: <OrderDetail /> },
+
 
     ],
   },
