@@ -6,6 +6,7 @@ import {
   Squares2X2Icon,
   UserGroupIcon,
   ClipboardDocumentListIcon,
+  TicketIcon,
 } from "@heroicons/react/24/solid";
 import "./App.css";
 import SideBar from "./components/SideBar";
@@ -46,6 +47,11 @@ const App = () => {
       <Link to="/invoice">Hóa đơn</Link>,
       "/invoice",
       <ClipboardDocumentListIcon className="w-5 h-5" />
+    ),
+     getItem(
+      <Link to={"/vouchers"}>Voucher</Link>,
+      "/vouchers",
+      <TicketIcon className="w-5 h-5" />
     ),
     getItem("Mọi người", "user", <UserGroupIcon className="w-5 h-5" />, [
       getItem(<Link to="/customers">Người dùng</Link>, "/customers"),
