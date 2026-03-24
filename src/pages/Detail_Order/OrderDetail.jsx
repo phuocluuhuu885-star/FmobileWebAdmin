@@ -28,6 +28,9 @@ const OrderDetail = () => {
   const token = Cookies.get('token');
   const adminName = myProfile?.data?.username || myProfile?.data?.full_name || 'Unknown admin';
 
+  const [editingStartAt] = useState(new Date().toISOString());
+
+
   const [orderForm, setOrderForm] = useState({
     status: data.status || '',
     payment_method: data.payment_method || 'Chuyển khoản',
@@ -74,6 +77,24 @@ const OrderDetail = () => {
   const isWaitDelivery = orderForm.status === 'Đang giao hàng';
   const showShipperSelector = orderForm.status !== 'Chờ xác nhận';
   const isOrderLocked = orderForm.status === 'Đang giao hàng';
+  const isCancelled = orderForm.status === 'Đã hủy';
+  const isCompleted = orderForm.status === 'Đã giao hàng';
+
+
+    const getCancelReason = (order) => {
+    if (!order) return "";
+    const possibleKeys = [
+      "cancelReason", "cancel_reason", "reasonCancel", "reason_cancel",
+      "cancellationReason", "cancellation_reason", "reason", "note_cancel", "cancel_note",
+    ];
+    for (const key of possibleKeys) {
+      const value = order[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+    return "";
+  }; 
+
+  const cancelReason = getCancelReason(data);
 
   const fetchShippers = () => {
     axios
@@ -174,6 +195,7 @@ const OrderDetail = () => {
         });
       });
   };
+
 
   const totalOrder = useMemo(() => {
     return orderForm.productsOrder.reduce((sum, product) => {
@@ -335,7 +357,30 @@ const OrderDetail = () => {
                 {editMode.general ? 'Đang sửa' : 'Sửa'}
               </Button>
             </div>
-            <p>Thời gian đặt hàng: {formattedDate(data.createdAt)}</p>
+            <div className="flex flex-col gap-1 mb-3">
+              <Typography.Text className="text-base">
+                Ngày tạo: {formattedDate(data.createdAt)}
+              </Typography.Text>
+              {isCancelled ? (
+                <>
+                  <Typography.Text className="text-red-600 text-base">
+                    Ngày hủy: {formattedDate(data.updatedAt)}
+                  </Typography.Text>
+                  <Typography.Text className="text-red-600 text-base">
+                    Lý do hủy: {cancelReason || "Không có lý do"}
+                  </Typography.Text>
+                </>
+              ) : isCompleted ? (
+                <Typography.Text className="text-base text-green-600">
+                  Ngày hoàn thành: {formattedDate(data.updatedAt)}
+                </Typography.Text>
+              ) : (
+                <Typography.Text className="text-base">
+                  Ngày hoàn thành: chưa hoàn thành
+                </Typography.Text>
+              )}
+            </div>
+
             <Space direction="vertical" className="w-full">
               <Input disabled={!editMode.general || isOrderLocked} value={orderForm.status} onChange={(e) => setOrderForm((prev) => ({ ...prev, status: e.target.value }))} placeholder="Trạng thái đơn hàng" />
               <Input disabled={!editMode.general || isOrderLocked} value={orderForm.info_id.name} onChange={(e) => updateInfoField('name', e.target.value)} placeholder="Tên khách hàng" />
