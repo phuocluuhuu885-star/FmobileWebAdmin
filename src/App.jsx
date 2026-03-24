@@ -7,6 +7,7 @@ import {
   UserGroupIcon,
   ClipboardDocumentListIcon,
   TicketIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/solid";
 import "./App.css";
 import SideBar from "./components/SideBar";
@@ -52,6 +53,11 @@ const App = () => {
       <Link to={"/vouchers"}>Voucher</Link>,
       "/vouchers",
       <TicketIcon className="w-5 h-5" />
+    ),
+    getItem(
+      <Link to={"/chat"}>Chat</Link>,
+      "/chat",
+      <ChatBubbleLeftRightIcon className="w-5 h-5" />
     ),
     getItem("Mọi người", "user", <UserGroupIcon className="w-5 h-5" />, [
       getItem(<Link to="/customers">Người dùng</Link>, "/customers"),

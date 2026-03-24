@@ -15,6 +15,7 @@ import Invoice from "../pages/invoice/Invoice";
 import Voucher from "../pages/Voucher/Voucher";
 import CreateNewProduct from "../pages/Products/CreateNewProduct";
 import EditProduct from "../pages/Products/editProduct";
+import AdminChat from "../pages/Chat/AdminChat";
 import OrderDetail from "../pages/Detail_Order/OrderDetail";
 
 export const router = createBrowserRouter([
@@ -34,6 +35,7 @@ export const router = createBrowserRouter([
       { path: "/chart/store", element: <StoreChart /> },
       { path: "/invoice", element: <Invoice /> },
       { path: "/vouchers", element: <Voucher /> },
+      { path: "/chat", element: <AdminChat /> },
       { path: "/invoice/detail", element: <OrderDetail /> },
 
 

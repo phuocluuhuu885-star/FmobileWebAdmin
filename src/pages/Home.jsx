@@ -86,7 +86,6 @@ const Home = () => {
       .catch(() => {
         // Error fetching total revenue
       });
-      });
   }, [startDate, endDate]);
 
   //-----------------------Top 5 sản phẩm doanh thu cao nhất-----------
