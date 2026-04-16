@@ -1,7 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm, Select, Modal } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -348,14 +347,6 @@ const OrderDetail = () => {
           <div className="bg-white p-4 rounded shadow-sm">
             <div className="flex items-center justify-between">
               <Typography.Title level={5}>Chi tiết chung</Typography.Title>
-              <Button
-                type={editMode.general ? 'primary' : 'default'}
-                icon={<EditOutlined />}
-                disabled={isOrderLocked}
-                onClick={() => setEditMode((prev) => ({ ...prev, general: !prev.general }))}
-              >
-                {editMode.general ? 'Đang sửa' : 'Sửa'}
-              </Button>
             </div>
             <div className="flex flex-col gap-1 mb-3">
               <Typography.Text className="text-base">
@@ -392,14 +383,6 @@ const OrderDetail = () => {
           <div className="bg-white p-4 rounded shadow-sm">
             <div className="flex items-center justify-between">
               <Typography.Title level={5}>Thông tin thanh toán</Typography.Title>
-              <Button
-                type={editMode.payment ? 'primary' : 'default'}
-                icon={<EditOutlined />}
-                disabled={isOrderLocked}
-                onClick={() => setEditMode((prev) => ({ ...prev, payment: !prev.payment }))}
-              >
-                {editMode.payment ? 'Đang sửa' : 'Sửa'}
-              </Button>
             </div>
             <Space direction="vertical" className="w-full">
               <Input disabled={!editMode.payment || isOrderLocked} value={orderForm.info_id.address} onChange={(e) => updateInfoField('address', e.target.value)} placeholder="Địa chỉ thanh toán" />
@@ -419,14 +402,6 @@ const OrderDetail = () => {
           <div className="bg-white p-4 rounded shadow-sm">
             <div className="flex items-center justify-between">
               <Typography.Title level={5}>Chi tiết giao nhận</Typography.Title>
-              <Button
-                type={editMode.shipping ? 'primary' : 'default'}
-                icon={<EditOutlined />}
-                disabled={isOrderLocked}
-                onClick={() => setEditMode((prev) => ({ ...prev, shipping: !prev.shipping }))}
-              >
-                {editMode.shipping ? 'Đang sửa' : 'Sửa'}
-              </Button>
             </div>
             <Space direction="vertical" className="w-full">
               <Input disabled={!editMode.shipping || isOrderLocked} value={orderForm.info_id.address} onChange={(e) => updateInfoField('address', e.target.value)} placeholder="Địa chỉ giao" />
@@ -442,14 +417,6 @@ const OrderDetail = () => {
         <div className="col-span-2 bg-white p-4 rounded shadow-sm">
           <div className="flex items-center justify-between">
             <Typography.Title level={5}>Order Sản phẩm</Typography.Title>
-            <Button
-              type={editMode.products ? 'primary' : 'default'}
-              icon={<EditOutlined />}
-              disabled={isOrderLocked}
-              onClick={() => setEditMode((prev) => ({ ...prev, products: !prev.products }))}
-            >
-              {editMode.products ? 'Đang sửa' : 'Sửa'}
-            </Button>
           </div>
           <div className="mb-3">
             <Button disabled={!editMode.products || isOrderLocked} onClick={addProductRow}>
