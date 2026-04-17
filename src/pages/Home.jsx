@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import "./home.css";
 import Cookies from "js-cookie";
@@ -32,6 +32,7 @@ const Home = () => {
 
   const dataUser = useSelector((state) => state.customerReducer.data);
   const dataStore = useSelector((state) => state.storeReducer.data);
+  const dataInvoice = useSelector((state) => state.invoiceReducer.data);
   const dataProduct = useSelector((state) => state.productReducer.data);
   const loadingProduct = useSelector((state) => state.productReducer.loading);
   const loadingStore = useSelector((state) => state.storeReducer.loading);
@@ -43,8 +44,6 @@ const Home = () => {
   const [loadingTop10Product, setLoadingTop10Product] = useState(false);
   const [top5UserByProduct, setTop5UserByProduct] = useState(null);
   const [loadingTopUserByProduct,setLoadingTopUserByProduct] = useState(false);
-  const [topLeastSellingProducts,setTopLeastSellingProducts] = useState(null);
-  const [loadingtopleastSellingProducts,setLoadingTopleteastSellingProducts] = useState(false);
   const [topStore, setTopStore] = useState(null);
   const [loadingTopStore, setLoadingTopStore] = useState(false);
   const [startDate, setStartDate] = useState(null);
@@ -52,25 +51,102 @@ const Home = () => {
   const [totalRevenue, setTotalRevenue] = useState(null);
   const [ordersSuccessfully, setOrdersSuccessfully] = useState(null);
   
-  //---------Top sản phẩm bán ít-------------
-  useEffect(() => {
-    setLoadingTopleteastSellingProducts(true);
+ const toDateObj = (d) => {
+    if (!d) return null;
+    if (typeof d.toDate === "function") return d.toDate();
+    return new Date(d);
+  };
 
-    const url = `http://localhost:3000/api/statistical/get-top-least-selling-products`;
-     const params = {};
-    if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
-    if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
+  const revenueTrend = useMemo(() => {
+    const orders = Array.isArray(dataInvoice?.result) ? dataInvoice.result : [];
+    const start = toDateObj(startDate);
+    const end = toDateObj(endDate);
+    const hasSelectedRange = Boolean(start && end);
 
-    axios
-      .get(url, { params })
-      .then((response) => {
-        setLoadingTopleteastSellingProducts(false);
-        setTopLeastSellingProducts(response.data);
-      })
-      .catch(() => {
-        setLoadingTopleteastSellingProducts(false);
-      });
-  }, [startDate, endDate]);
+    const monthlyMap = new Map();
+
+    orders.forEach((order) => {
+      const createdAt = new Date(order?.createdAt);
+      if (Number.isNaN(createdAt.getTime())) return;
+      if (start && createdAt < start) return;
+      if (end) {
+        const endOfDay = new Date(end);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (createdAt > endOfDay) return;
+      }
+
+      // Doanh thu thực: chỉ cộng đơn đã giao hàng
+      if (order?.status !== "Đã giao hàng") return;
+      const amount = Number(order?.total_price || 0);
+      const key = `${createdAt.getFullYear()}-${String(
+        createdAt.getMonth() + 1
+      ).padStart(2, "0")}`;
+      monthlyMap.set(key, (monthlyMap.get(key) || 0) + amount);
+    });
+
+    const monthKeys = [];
+    if (hasSelectedRange) {
+      const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const stop = new Date(end.getFullYear(), end.getMonth(), 1);
+      while (cursor <= stop) {
+        const key = `${cursor.getFullYear()}-${String(
+          cursor.getMonth() + 1
+        ).padStart(2, "0")}`;
+        monthKeys.push(key);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    }
+
+    const labels = monthKeys.map((k) => {
+      const [y, m] = k.split("-");
+      return `${m}/${y}`;
+    });
+    const values = monthKeys.map((k) => monthlyMap.get(k) || 0);
+
+    return { labels, values };
+  }, [dataInvoice, startDate, endDate]);
+
+  const revenueTrendChartData = useMemo(
+    () => ({
+      labels: revenueTrend.labels,
+      datasets: [
+        {
+          label: "Doanh thu (VNĐ)",
+          data: revenueTrend.values,
+          backgroundColor: "#407cff",
+          borderColor: "#407cff",
+          borderWidth: 1,
+          borderRadius: 6,
+          maxBarThickness: 45,
+        },
+      ],
+    }),
+    [revenueTrend]
+  );
+
+  const revenueTrendChartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) =>
+              `${Number(context.raw || 0).toLocaleString("vi-VN")} đ`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => `${Number(value).toLocaleString("vi-VN")} đ`,
+          },
+        },
+      },
+    }),
+    []
+  );
   //------------Tổng doanh thu-----------
   useEffect(() => {
     const url = `${import.meta.env.VITE_BASE_URL}statistical/get-total-revenue`;
@@ -87,6 +163,20 @@ const Home = () => {
         // Error fetching total revenue
       });
   }, [startDate, endDate]);
+
+  // Đoạn này có ở code 1 nhưng mất ở code 2
+useEffect(() => {
+  const url = `${import.meta.env.VITE_BASE_URL}statistical/get-successful-orders`;
+  const params = {};
+  if (startDate) params.startDate = startDate.format("YYYY-MM-DD");
+  if (endDate) params.endDate = endDate.format("YYYY-MM-DD");
+
+  axios.get(url, { params })
+    .then((response) => {
+      setOrdersSuccessfully(response.data.data.successfulOrders); // Cập nhật state ở đây
+    })
+    .catch((error) => { console.log(error); });
+}, [startDate, endDate]);
 
   //-----------------------Top 5 sản phẩm doanh thu cao nhất-----------
   useEffect(() => {
@@ -244,7 +334,7 @@ const Home = () => {
       //render: (text) => <img src={text} className="w-16" />,
     },
     {
-      title: "Số đơn thành công",
+      title: "Số lượng đơn hàng đã mua",
       dataIndex: "totalSuccessfulOrders",
       key: "totalSuccessfulOrders",
       render: (text) => (
@@ -275,7 +365,7 @@ const Home = () => {
       <Flex vertical={false}>
         <Card bordered size="default" className="shadow-md  m-3">
           <Statistic
-            title="Người dùng kích hoạt"
+            title="Tổng người dùng đã đăng ký"
             value={dataUser ? dataUser?.result.length : 0}
             formatter={formatter}
             loading={loadingUser}
@@ -292,7 +382,7 @@ const Home = () => {
       </Card>
       <Card bordered size="default" className="shadow-md m-3">
         <Statistic
-          title="Tổng đơn hàng thành công"
+          title="Tổng số đơn hàng đã bán"
           value={ordersSuccessfully}
           formatter={formatter}
           loading={loadingInvoice}
@@ -300,7 +390,7 @@ const Home = () => {
       </Card>
         <Card bordered size="default" className="shadow-md  m-3">
           <Statistic
-            title="Sản phẩm hiện có"
+            title="Sản phẩm cửa hàng hiện có"
             value={dataProduct ? dataProduct?.result.length : 0}
             formatter={formatter}
             loading={loadingProduct}
@@ -381,17 +471,25 @@ const Home = () => {
           <div className="flex flex-col border rounded-md shadow-lg">
             <div className="p-2 px-5">
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                Top sản phẩm bán ít nhất
+               Biểu đồ doanh thu theo tháng
               </Typography.Title>
             </div>
-            <Table
-              // Cấu hình bảng thứ hai
-              pagination={false}
-              dataSource={topLeastSellingProducts?.data}
-              columns={columns2}
-              rowKey={(record) => record.id}
-              loading={loadingtopleastSellingProducts}
-            />
+           <div style={{ height: 320, padding: 16 }}>
+              {revenueTrend.labels.length > 0 ? (
+                <Bar
+                  data={revenueTrendChartData}
+                  options={revenueTrendChartOptions}
+                />
+              ) : (
+               <Empty
+                  description={
+                    startDate && endDate
+                      ? "Không có dữ liệu doanh thu trong khoảng thời gian đã chọn"
+                      : "Vui lòng chọn thời gian thống kê để xem biểu đồ"
+                  }
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
