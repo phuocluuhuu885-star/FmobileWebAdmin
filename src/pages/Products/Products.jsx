@@ -1,11 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Flex,
-  FloatButton,
   Form,
   Input,
-  InputNumber,
   Modal,
   Select,
   Table,
@@ -13,53 +11,72 @@ import {
   notification,
 } from "antd";
 import ShowReviewsModal from "./danhgia";
-
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductRequest } from "../../redux/actions/Product";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
-const { Title } = Typography;
+
 const { confirm } = Modal;
-import { PlusIcon } from "@heroicons/react/24/solid";
-import { PlusOutlined } from "@ant-design/icons";
-import "./DialogUpdateProduct.css";
-import { fetchProductDetailRequest } from "../../redux/actions/DetailProduct";
-const { Text } = Typography;
+
+const normalizeImage = (v) => {
+  if (!v) return "";
+  if (Array.isArray(v)) {
+    return v.length > 0 ? normalizeImage(v[0]) : "";
+  }
+  if (typeof v === "string" && v.startsWith("http")) {
+    return v;
+  }
+  if (typeof v === "object" && v.url) {
+    return v.url;
+  }
+  return "";
+};
+
+const findFirstImageUrl = (node, depth = 0) => {
+  if (!node || depth > 4) return "";
+  const direct = normalizeImage(node);
+  if (direct) return direct;
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = findFirstImageUrl(item, depth + 1);
+      if (found) return found;
+    }
+  } else if (typeof node === "object") {
+    const priorityKeys = ["images", "image", "option", "options"];
+    for (const key of priorityKeys) {
+      if (node[key]) {
+        const found = findFirstImageUrl(node[key], depth + 1);
+        if (found) return found;
+      }
+    }
+  }
+  return "";
+};
+
 const Products = () => {
   const token = Cookies.get("token");
-  const loadingProduct = useSelector((state) => state.productReducer.loading);
   const dataProduct = useSelector((state) => state.productReducer.data);
-  const errorProduct = useSelector((state) => state.productReducer.error);
-
-  const loadingCategory = useSelector((state) => state.categoryReducer.loading);
   const dataCategory = useSelector((state) => state.categoryReducer.data);
-  const errorCategory = useSelector((state) => state.categoryReducer.error);
-
-  const loadingStore = useSelector((state) => state.storeReducer.loading);
-  const dataStore = useSelector((state) => state.storeReducer.data);
-  const errorStore = useSelector((state) => state.storeReducer.error);
-
+  const loadingCategory = useSelector((state) => state.categoryReducer.loading);
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [selected, setSelected] = useState();
-  const [openDialog, setOpenDialog] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedStore, setSelectedStore] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState();
-  const [openDialogSendEmail, setOpenDialogSendEmail] = useState(false);
   const [openDialogEditProduct, setOpenDialogEditProduct] = useState(false);
-
   const [selectedProductId, setSelectedProductId] = useState(null);
 
-  // Hàm xử lý khi click vào nút hiển thị đánh giá
   const handleShowReviews = (productId) => {
     setSelectedProductId(productId);
   };
 
+  useEffect(() => {
+    dispatch(fetchProductRequest());
+  }, [dispatch]);
 
   const columns = [
     {
@@ -74,14 +91,8 @@ const Products = () => {
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
-        <button
-          onClick={() => {
-            console.log(record._id);
-            navigate(`/products/${record._id}`);
-            setOpenDialog(true);
-          }}
-        >
-          <Typography>{text}</Typography>
+        <button onClick={() => navigate(`/products/${record._id}`)}>
+          <Typography.Text strong>{text}</Typography.Text>
         </button>
       ),
     },
@@ -89,28 +100,33 @@ const Products = () => {
       title: "Loại sản phẩm",
       dataIndex: "category_id",
       key: "category_id",
-      render: (category) => <Typography>{category.name}</Typography>,
+      render: (category) => <Typography>{category?.name || "N/A"}</Typography>,
     },
     {
       title: "Ảnh",
-      dataIndex: "image",
+      dataIndex: "images", 
       key: "image",
-      render: (text) => <img src={text} className="w-20" />,
+      render: (text, record) => (
+        <ProductImageCell
+          productId={record?._id}
+          token={token}
+          inlineImage={
+            normalizeImage(record?.images) || 
+            normalizeImage(record?.image) ||  
+            normalizeImage(record?.options?.[0]?.image) ||
+            findFirstImageUrl(record)
+          }
+        />
+      ),
     },
     {
       title: "Giá",
       dataIndex: "minPrice",
       key: "price",
       render: (text) => (
-        <Typography>{text ? text.toLocaleString("vi-VN") : ""}</Typography>
+        <Typography>{text ? text.toLocaleString("vi-VN") + " đ" : "Liên hệ"}</Typography>
       ),
     },
-    // {
-    //   title: "Cửa hàng",
-    //   dataIndex: "store_id",
-    //   key: "store_id",
-    //   render: (store) => <Typography>{store.name}</Typography>,
-    // },
     {
       title: "Kích hoạt",
       dataIndex: "active",
@@ -119,288 +135,145 @@ const Products = () => {
         <button
           onClick={() => {
             confirm({
-              title: "Bạn muốn thay đổi trạng thái của sản phẩm này?",
+              title: "Thay đổi trạng thái sản phẩm?",
               onOk: () => {
                 axios
                   .put(
-                    `${
-                      import.meta.env.VITE_BASE_URL
-                    }products/change-active-product/${record._id}`,
+                    `${import.meta.env.VITE_BASE_URL}products/change-active-product/${record._id}`,
                     {},
-                    {
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
-                    }
+                    { headers: { Authorization: `Bearer ${token}` } }
                   )
-                  .then((response) => {
+                  .then(() => {
                     dispatch(fetchProductRequest());
-                    notification.success({
-                      message: "Thành công",
-                      description: "Chuyển trạng thái thành công!",
-                      duration: 3,
-                      type: "success",
-                    });
+                    notification.success({ message: "Thành công" });
                   })
-                  .catch((error) => {
-                    console.log(error);
-                    notification.error({
-                      error: "Thất Bại",
-                      description: "Chuyển trạng thái thất bại!",
-                      duration: 3,
-                      type: "error",
-                    });
-                  });
-              },
-              okButtonProps: {
-                style: {
-                  backgroundColor: "#407cff",
-                },
+                  .catch(() => notification.error({ message: "Thất bại" }));
               },
             });
           }}
-          className={`${
-            active ? `bg-green-500  ` : `bg-red-500`
-          } rounded-lg px-3 py-2 text-white`}
+          className={`${active ? `bg-green-500` : `bg-red-500`} rounded-lg px-3 py-2 text-white`}
         >
           {active ? "Kích hoạt" : "Chưa kích hoạt"}
         </button>
       ),
     },
-    // {
-    //   title: "",
-    //   key: "sendEmail",
-    //   render: (record) => (
-    //     <Button
-    //       disabled={record.active ? true : false}
-    //       onClick={() => {
-    //         setOpenDialogSendEmail(true);
-    //         setSelectedProduct(record);
-    //       }}
-    //     >
-    //       Gửi mail
-    //     </Button>
-    //   ),
-    // },
     {
-      title: "",
-      key: "update",
-      render: (record) => {
-        return (
-          <Flex gap={8} wrap="wrap">
-            <Button
-              onClick={() => {
-                navigate(`/products/${record._id}`);
-              }}
-            >
-              Xem
-            </Button>
-            <Button
-              onClick={() => {
-                setSelectedProduct(record._id);
-                dispatch(fetchProductDetailRequest(record._id));
-                setOpenDialogEditProduct(true);
-              }}
-            >
-              Sửa
-            </Button>
-          </Flex>
-        );
-      },
-    },
-
-    {
-      title: "Hiển thị đánh giá",
-      key: "showReviews",
+      title: "Hành động",
+      key: "action",
       render: (record) => (
-        <Button onClick={() => handleShowReviews(record._id)}>
-          Hiển thị đánh giá
-        </Button>
+        <Flex gap={8}>
+          <Button onClick={() => navigate(`/products/${record._id}`)}>Xem</Button>
+          <Button
+            onClick={() => {
+              setSelectedProduct(record._id);
+              setOpenDialogEditProduct(true);
+            }}
+          >
+            Sửa
+          </Button>
+          <Button
+            danger
+            onClick={() => {
+              confirm({
+                title: "Xóa sản phẩm?",
+                onOk: () => {
+                  axios
+                    .delete(`${import.meta.env.VITE_BASE_URL}products/delete-product/${record._id}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                    .then(() => {
+                      dispatch(fetchProductRequest());
+                      notification.success({ message: "Đã xóa" });
+                    });
+                },
+              });
+            }}
+          >
+            Xóa
+          </Button>
+        </Flex>
       ),
     },
-  
+    {
+      title: "Đánh giá",
+      key: "showReviews",
+      render: (record) => (
+        <Button onClick={() => handleShowReviews(record._id)}>Xem đánh giá</Button>
+      ),
+    },
   ];
-  
-  const removeAccents = (str) => {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  };
 
   return (
     <div>
-      <div className="flex justify-end my-3">
-        {/* <Select
-          showSearch
-          style={{
-            width: 300,
-          }}
-          allowClear
-          size="middle"
-          className=""
-          placeholder="Search to select store"
-          onChange={(value) => {
-            console.log(value);
-            setSelectedStore(value);
-            dispatch(fetchProductRequest(selectedCategory, value));
-          }}
-          filterOption={(input, option) =>
-            removeAccents(option?.label.toLowerCase() ?? "").includes(
-              removeAccents(input.toLowerCase())
-            )
-          }
-          options={
-            dataStore
-              ? dataStore?.data.map((category) => ({
-                  label: category.name,
-                  value: category._id,
-                }))
-              : null
-          }
-          loading={loadingCategory}
-        /> */}
-        {/* select category */}
+      <div className="flex justify-end my-3 gap-3">
         <Select
           showSearch
-          style={{
-            width: 300,
-            marginLeft: 10,
-          }}
+          style={{ width: 300 }}
+          placeholder="Lọc theo loại"
           allowClear
-          size="middle"
-          placeholder="Search to select category"
-          onChange={(value) => {
-            console.log(value);
-            setSelectedCategory(value);
-            dispatch(fetchProductRequest(value, selectedStore));
+          onChange={(v) => {
+            setSelectedCategory(v);
+            dispatch(fetchProductRequest(v, selectedStore));
           }}
-          filterOption={(input, option) =>
-            removeAccents(option?.label.toLowerCase() ?? "").includes(
-              removeAccents(input.toLowerCase())
-            )
-          }
-          options={
-            dataCategory
-              ? dataCategory?.data.map((category) => ({
-                  label: category.name,
-                  value: category._id,
-                }))
-              : null
-          }
-          loading={loadingCategory}
+          options={dataCategory?.data?.map((c) => ({ label: c.name, value: c._id }))}
         />
         <Button
           type="primary"
-          className=" bg-[#407cff] px-10  ml-3"
-          onClick={() => {
-            navigate("/products/create");
-          }}
+          className="bg-[#407cff]"
+          onClick={() => navigate("/products/create")}
         >
-          create new a product
+          Tạo sản phẩm mới
         </Button>
       </div>
+
       <Table
-        dataSource={dataProduct ? dataProduct.result : dataProduct}
+        dataSource={dataProduct?.result || []}
         columns={columns}
         bordered
-        rowKey={(record) => record._id}
+        rowKey="_id"
       />
+
       <ShowReviewsModal
-      productId={selectedProductId}
-      onClose={() => setSelectedProductId(null)}
-    />
+        productId={selectedProductId}
+        onClose={() => setSelectedProductId(null)}
+      />
+
       <DialogUpateProduct
         open={openDialogEditProduct}
         productId={selectedProduct}
-        close={() => {
-          setOpenDialogEditProduct(false);
-        }}
+        close={() => setOpenDialogEditProduct(false)}
       />
     </div>
   );
 };
 
-export default Products;
+const ProductImageCell = ({ productId, token, inlineImage }) => {
+  const [src, setSrc] = useState(inlineImage || "");
 
-const DialogSendEmail = ({ open, onCancel, data }) => {
-  const [formRef] = Form.useForm();
-  const token = Cookies.get("token");
-  const handleFinish = (value) => {
-    const { content } = value;
-    const dataSend = {
-      productId: data._id,
-      storeId: data.store_id._id,
-      content,
-    };
-    axios
-      .post(`${import.meta.env.VITE_BASE_URL}products/send-email`, dataSend, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        notification.success({
-          message: "Thành công",
-          description: "Gửi email thành công!",
-          duration: 3,
-          type: "success",
-        });
-        formRef.resetFields();
-        onCancel();
-      })
-      .catch((error) => {
-        notification.error({
-          error: "Thất Bại",
-          description: "Gửi email thất bại",
-          duration: 3,
-          type: "error",
-        });
-      });
-  };
-  const handleCancel = () => {
-    formRef.resetFields();
-    onCancel();
-  };
+  useEffect(() => {
+    if (inlineImage) {
+      setSrc(inlineImage);
+    } else if (productId) {
+      axios
+        .get(`${import.meta.env.VITE_BASE_URL}products/detail-product/${productId}`)
+        .then((res) => {
+          const detail = res?.data?.result;
+          const img = normalizeImage(detail?.images) || normalizeImage(detail?.image) || findFirstImageUrl(detail);
+          if (img) setSrc(img);
+        })
+        .catch(() => {});
+    }
+  }, [inlineImage, productId]);
+
   return (
-    <Modal open={open} footer={null} onCancel={onCancel} closeIcon={false}>
-      <Flex vertical justify="center">
-        <Typography.Title level={3} className="self-center">
-          Gửi email cảnh báo
-        </Typography.Title>
-        <Form
-          form={formRef}
-          layout="vertical"
-          size="middle"
-          onFinish={handleFinish}
-        >
-          <Form.Item
-            name="content"
-            rules={[
-              { required: true, message: "Please input your content email!" },
-            ]}
-          >
-            <Input.TextArea placeholder="nội dung email" rows={6} />
-          </Form.Item>
-          <div className="flex flex-row items-center justify-between ">
-            <Form.Item>
-              <Button
-                htmlType="button"
-                className="w-[230px]"
-                onClick={handleCancel}
-              >
-                Hủy
-              </Button>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                htmlType="submit"
-                type="primary"
-                className="bg-[#407cff] px-10 w-[230px]"
-              >
-                Gửi
-              </Button>
-            </Form.Item>
-          </div>
-        </Form>
-      </Flex>
-    </Modal>
+    <img
+      src={src || "https://placehold.co/80x80?text=No+Image"}
+      className="w-20 h-20 object-contain rounded border"
+      alt="product"
+      onError={(e) => {
+        e.currentTarget.src = "https://placehold.co/80x80?text=No+Image";
+      }}
+    />
   );
 };
 
@@ -409,160 +282,51 @@ const DialogUpateProduct = ({ productId, open, close }) => {
   const token = Cookies.get("token");
   const dispatch = useDispatch();
   const dataCategory = useSelector((state) => state.categoryReducer.data);
-  const data = useSelector((state) => state.productDetailReducer.data);
-  const loading = useSelector((state) => state.productDetailReducer.loading);
-  const [selectedCategory, setSelectedCategory] = useState();
 
   useEffect(() => {
-    if (productId) {
-      dispatch(fetchProductDetailRequest(productId));
+    if (open && productId) {
+      axios
+        .get(`${import.meta.env.VITE_BASE_URL}products/detail-product/${productId}`)
+        .then((res) => {
+          const d = res.data.result;
+          form.setFieldsValue({
+            name: d.name,
+            manufacturer: d.manufacturer,
+            category_id: d.category_id?._id || d.category_id,
+            status: d.status,
+            description: d.description,
+            operatingSystem: d.operatingSystem,
+          });
+        });
     }
-    console.log(productId);
-  }, [productId, dispatch]);
+  }, [open, productId, form]);
 
-  const handleFinish = (values) => {
-    console.log(values);
+  const onFinish = (values) => {
     axios
-      .put(
-        `${import.meta.env.VITE_BASE_URL}products/update-product/${productId}`,
-        values,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      .then((res) => {
-        dispatch(fetchProductRequest());
-        notification.success({
-          message: "success",
-          description: "sửa sản phẩm thành công",
-          duration: 3,
-          type: "success",
-        });
+      .put(`${import.meta.env.VITE_BASE_URL}products/update-product/${productId}`, values, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch((err) => {
-        console.log(err);
-        notification.error({
-          error: "error",
-          description: "sửa sản phẩm thất bại!",
-          duration: 3,
-          type: "error",
-        });
+      .then(() => {
+        dispatch(fetchProductRequest());
+        notification.success({ message: "Cập nhật thành công" });
+        close();
       });
   };
-  const renderFormItems = (items) =>
-    items.map((item) => (
-      <Form.Item
-        key={item.name}
-        label={item.label}
-        name={item.name}
-        rules={item.rules}
-      >
-        {item.component}
-      </Form.Item>
-    ));
-  const formItems = [
-    {
-      label: "Tên sản phẩm",
-      name: "name",
-      rules: [{ required: true, message: "Nhập tên sản phẩm" }],
-      component: <Input size="middle" placeholder="Tên sản phẩm" />,
-    },
-    {
-      label: "Tên nhà sản xuất",
-      name: "manufacturer",
-      component: (
-        <Input size="middle" placeholder="Thông tin nhà sản xuất sản phẩm" />
-      ),
-    },
-    {
-      label: "Loại sản phẩm",
-      name: "category_id",
-      rules: [{ required: true, message: "Chọn loại sản phẩm" }],
-      component: (
-        <Select
-          size="middle"
-          placeholder="Chọn loại sản phẩm"
-          options={dataCategory?.data.map((category) => ({
-            label: category.name,
-            value: category._id,
-          }))}
-        />
-      ),
-    },
-    {
-      label: "Trạng thái sản phẩm",
-      name: "status",
-      rules: [{ required: true, message: "Nhập trạng thái sản phẩm" }],
-      component: (
-        <Input
-          size="middle"
-          placeholder="Nhập trạng thái sản phẩm (ví dụ: mới/cũ/like new...)"
-        />
-      ),
-    },
-    {
-      label: "Mô tả sản phẩm",
-      name: "description",
-      rules: [{ required: true, message: "Nhập mô tả" }],
-      component: (
-        <Input.TextArea rows={5} size="middle" placeholder="Mô tả sản phẩm" />
-      ),
-    },
-    {
-      label: "Hệ điều hành sản phẩm",
-      name: "operatingSystem",
-      rules: [{ required: true, message: "Chọn hệ điều hành sản phẩm" }],
-      component: (
-         <Select size="middle" placeholder="Chọn hệ điều hành sản phẩm">
-          <Select.Option value="Android">Android</Select.Option>
-          <Select.Option value="IOS">IOS</Select.Option>
-          <Select.Option value="Window">Window</Select.Option>
-          <Select.Option value="MacOs">MacOs</Select.Option>
-        </Select>
-      ),
-    },
-  ];
+
   return (
-    <Modal
-      open={open}
-      footer={null}
-      closeIcon={null}
-      width={"40%"}
-      style={{
-        minWidth: 600,
-        maxHeight: "80vh",
-        overflowY: "auto",
-        scrollbarWidth: "none",
-      }}
-      onCancel={() => {
-        close();
-        form.resetFields();
-      }}
-    >
-      <Form
-        form={form}
-        layout="horizontal"
-        onFinish={handleFinish}
-        labelCol={{ span: 6 }}
-        labelAlign="left"
-        initialValues={{
-          name: data ? data?.result.name : "",
-          manufacturer: data ? data?.result.manufacturer : "",
-          category_id: data ? data?.result.category_id._id : undefined,
-          status: data ? data?.result.status : undefined,
-          description: data ? data?.result.description : "",
-          operatingSystem: data ? data?.result.operatingSystem : undefined,
-        }}
-      >
-        {renderFormItems(formItems)}
-        <Form.Item>
-          <Button
-            htmlType="submit"
-            type="primary"
-            className="bg-[#407cff] w-[30%]"
-          >
-            sửa sản phẩm
-          </Button>
+    <Modal title="Sửa sản phẩm" open={open} onCancel={close} onOk={() => form.submit()} width={600}>
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form.Item name="name" label="Tên sản phẩm" rules={[{ required: true }]}>
+          <Input />
         </Form.Item>
+        <Form.Item name="category_id" label="Loại sản phẩm">
+          <Select options={dataCategory?.data?.map((c) => ({ label: c.name, value: c._id }))} />
+        </Form.Item>
+        <Form.Item name="status" label="Trạng thái"><Input /></Form.Item>
+        <Form.Item name="description" label="Mô tả"><Input.TextArea rows={4} /></Form.Item>
       </Form>
     </Modal>
   );
 };
+
+export default Products;

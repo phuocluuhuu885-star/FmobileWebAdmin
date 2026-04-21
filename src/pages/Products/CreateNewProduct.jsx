@@ -4,7 +4,6 @@ import {
   Flex,
   Form,
   Input,
-  InputNumber,
   Layout,
   Select,
   Typography,
@@ -70,9 +69,7 @@ const CreateNewProduct = () => {
       label: "Tên sản phẩm",
       name: "name",
       rules: [{ required: true, message: "Nhập tên sản phẩm" }],
-      component: (
-        <Input size="middle" className="w-[50%]" placeholder="Tên sản phẩm" />
-      ),
+      component: <Input size="middle" placeholder="Tên sản phẩm" />,
     },
     {
       label: "Tên nhà sản xuất",
@@ -80,7 +77,6 @@ const CreateNewProduct = () => {
       component: (
         <Input
           size="middle"
-          className="w-[50%]"
           placeholder="Thông tin nhà sản xuất sản phẩm"
         />
       ),
@@ -91,7 +87,7 @@ const CreateNewProduct = () => {
       rules: [{ required: true, message: "Chọn loại sản phẩm" }],
       component: (
         <Select
-          style={{ width: "50%" }}
+          className="w-full"
           size="middle"
           placeholder="Chọn loại sản phẩm"
           options={dataCategory?.data.map((category) => ({
@@ -109,21 +105,7 @@ const CreateNewProduct = () => {
       component: (
         <Input
           size="middle"
-           className="w-[50%]"
           placeholder="Nhập trạng thái sản phẩm (ví dụ: mới/cũ/like new...)"
-        />
-      ),
-    },
-    {
-      label: "Mô tả sản phẩm",
-      name: "description",
-      rules: [{ required: true, message: "Nhập mô tả" }],
-      component: (
-        <Input.TextArea
-          rows={5}
-          size="middle"
-          className="w-[70%]"
-          placeholder="Mô tả sản phẩm"
         />
       ),
     },
@@ -133,7 +115,7 @@ const CreateNewProduct = () => {
       rules: [{ required: true, message: "Chọn hệ điều hành sản phẩm" }],
       component: (
         <Select
-          style={{ width: "50%" }}
+          className="w-full"
           size="middle"
           placeholder="Chọn hệ điều hành sản phẩm"
         >
@@ -143,6 +125,12 @@ const CreateNewProduct = () => {
           <Select.Option value="MacOs">MacOs</Select.Option>
         </Select>
       ),
+    },
+    {
+      label: "Mô tả sản phẩm",
+      name: "description",
+      rules: [{ required: true, message: "Nhập mô tả" }],
+      component: <Input.TextArea rows={5} size="middle" placeholder="Mô tả sản phẩm" />,
     },
   ];
 
@@ -163,16 +151,23 @@ const CreateNewProduct = () => {
       ) : (
         <Flex
           vertical
-          className="border w-[50%] p-4 mx-auto my-auto mt-3 shadow-xl rounded-xl"
+          className="border w-full max-w-3xl p-6 mx-auto my-auto mt-6 shadow-xl rounded-xl bg-white"
           style={{ flex: 1 }}
         >
-          <Form form={form} layout="horizontal" onFinish={handleFinish}>
+          <Form
+            form={form}
+            layout="horizontal"
+            labelCol={{ span: 7 }}
+            wrapperCol={{ span: 17 }}
+            colon={false}
+            onFinish={handleFinish}
+          >
             {renderFormItems(formItems)}
-            <Form.Item>
+            <Form.Item wrapperCol={{ span: 17, offset: 7 }} style={{ marginTop: 8 }}>
               <Button
                 htmlType="submit"
                 type="primary"
-                className="bg-[#407cff] w-[30%]"
+                 className="bg-[#407cff] min-w-[180px]"
               >
                 Tạo sản phẩm
               </Button>

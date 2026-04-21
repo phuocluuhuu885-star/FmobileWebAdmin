@@ -265,14 +265,7 @@ const ProductDetail = () => {
                 </>
               )}
             </Text>
-            <Text className="text-base">
-              {data?.result.description && (
-                <>
-                  <span className="font-bold">Mô tả:</span>{" "}
-                  {data?.result.description}
-                </>
-              )}
-            </Text>
+            
             <Text className="text-base">
               {data?.result.screen && (
                 <>
@@ -378,6 +371,14 @@ const ProductDetail = () => {
                 <>
                   <span className="font-bold">Thông tin khác:</span>{" "}
                   {data?.result.other}
+                </>
+              )}
+            </Text>
+            <Text className="text-base">
+              {data?.result.description && (
+                <>
+                  <span className="font-bold">Mô tả chi tiết sản phẩm:</span>{" "}
+                  {data?.result.description}
                 </>
               )}
             </Text>
