@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm } from 'antd';
 import moment from 'moment';
@@ -194,16 +194,6 @@ const OrderDetail = () => {
       });
       return;
     }
-    const saveTime = new Date().toISOString();
-    const durationMinutes = Math.max(moment(saveTime).diff(moment(editingStartAt), 'minutes'), 0);
-    const auditEntry = {
-      updated_by: adminName,
-      from_time: editingStartAt,
-      to_time: saveTime,
-      note: noteInput || 'Cập nhật thông tin đơn hàng',
-      duration_minutes: durationMinutes,
-    };
-
     const payload = {
       status: orderForm.status,
       payment_method: orderForm.payment_method,
@@ -220,15 +210,17 @@ const OrderDetail = () => {
         custom_name: product.custom_name || '',
         custom_price: Number(product.custom_price || 0),
       })),
-      admin_update_logs: [...auditLogs, auditEntry],
+      note: noteInput || '',
     };
 
     try {
       setIsSaving(true);
-      await axios.put(`${import.meta.env.VITE_BASE_URL}order/update-order/${data._id}`, payload, {
+      const res = await axios.put(`${import.meta.env.VITE_BASE_URL}order/update-order/${data._id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAuditLogs((prev) => [...prev, auditEntry]);
+      if (res.data && res.data.result && res.data.result.admin_update_logs) {
+        setAuditLogs(res.data.result.admin_update_logs);
+      }
       setNoteInput('');
       dispatch(fetchInvoiceRequest(token));
       notification.success({
