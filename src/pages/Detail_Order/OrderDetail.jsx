@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm, Select, Modal } from 'antd';
+import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm } from 'antd';
 import moment from 'moment';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -35,7 +35,6 @@ const OrderDetail = () => {
     payment_method: data.payment_method || 'Chuyển khoản',
     ip: data.ip || '',
     payment_status: !!data.payment_status,
-    shipper_id: data.shipper_id?._id || data.shipper_id || null,
     delivery_method: data.delivery_method || 'Tiêu chuẩn',
     info_id: {
       name: data.info_id?.name || '',
@@ -55,15 +54,6 @@ const OrderDetail = () => {
   const [noteInput, setNoteInput] = useState('');
   const [auditLogs, setAuditLogs] = useState(data.admin_update_logs || []);
   const [isSaving, setIsSaving] = useState(false);
-  const [shippers, setShippers] = useState([]);
-  const [isCreateShipperOpen, setIsCreateShipperOpen] = useState(false);
-  const [isCreatingShipper, setIsCreatingShipper] = useState(false);
-  const [newShipper, setNewShipper] = useState({
-    name: '',
-    phone_number: '',
-    shipper_code: '',
-    shipping_company: '',
-  });
   const [editMode, setEditMode] = useState({
     general: false,
     payment: false,
@@ -74,7 +64,6 @@ const OrderDetail = () => {
   const isPending = orderForm.status === 'Chờ giao hàng';
   const isWaitConfirm = orderForm.status === 'Chờ xác nhận';
   const isWaitDelivery = orderForm.status === 'Đang giao hàng';
-  const showShipperSelector = orderForm.status !== 'Chờ xác nhận';
   const isOrderLocked = orderForm.status === 'Đang giao hàng';
   const isCancelled = orderForm.status === 'Đã hủy';
   const isCompleted = orderForm.status === 'Đã giao hàng';
@@ -95,72 +84,12 @@ const OrderDetail = () => {
 
   const cancelReason = getCancelReason(data);
 
-  const fetchShippers = () => {
-    axios
-      .get(`${import.meta.env.VITE_BASE_URL}shipper`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setShippers(res?.data?.result || []);
-      })
-      .catch(() => {
-        // Lỗi lấy danh sách shipper
-      });
-  };
-
-  useEffect(() => {
-    fetchShippers();
-  }, [token]);
-
-  const handleCreateShipper = async () => {
-    if (!newShipper.name || !newShipper.phone_number || !newShipper.shipper_code || !newShipper.shipping_company) {
-      notification.warning({
-        message: 'Thiếu thông tin',
-        description: 'Vui lòng nhập đủ Tên, SĐT, Mã shipper và Đơn vị vận chuyển.',
-        duration: 3,
-      });
-      return;
-    }
-    try {
-      setIsCreatingShipper(true);
-      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}shipper/create`, newShipper, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const created = res?.data?.result;
-      fetchShippers();
-      setOrderForm((prev) => ({ ...prev, shipper_id: created?._id || prev.shipper_id }));
-      setNewShipper({ name: '', phone_number: '', shipper_code: '', shipping_company: '' });
-      setIsCreateShipperOpen(false);
-      notification.success({
-        message: 'Thành công',
-        description: 'Đã tạo và lưu shipper vào hệ thống.',
-        duration: 3,
-      });
-    } catch (err) {
-      notification.error({
-        message: 'Thất bại',
-        description: err?.response?.data?.message || 'Không thể tạo shipper',
-        duration: 3,
-      });
-    } finally {
-      setIsCreatingShipper(false);
-    }
-  };
-
   const updateStatus = (status, notificationType, successMessage, shouldNavigate = true) => {
-    if (status === 'Đang giao hàng' && !orderForm.shipper_id) {
-      notification.warning({
-        message: 'Thiếu shipper',
-        description: 'Vui lòng chọn shipper trước khi chuyển sang trạng thái giao hàng.',
-        duration: 3,
-      });
-      return;
-    }
     setOrderForm((prev) => ({ ...prev, status }));
     axios
       .put(
         `${import.meta.env.VITE_BASE_URL}order/update-order-status/${data._id}`,
-        { status, shipper_id: orderForm.shipper_id },
+        { status },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then(() => {
@@ -280,7 +209,6 @@ const OrderDetail = () => {
       payment_method: orderForm.payment_method,
       ip: orderForm.ip,
       payment_status: orderForm.payment_status,
-      shipper_id: orderForm.shipper_id,
       delivery_method: orderForm.delivery_method,
       info_id: {
         ...orderForm.info_id,
@@ -497,29 +425,6 @@ const OrderDetail = () => {
           </div>
 
           <div className="text-right mt-4 font-semibold">Tổng: {totalOrder.toLocaleString('vi-VN')} đ</div>
-          {showShipperSelector && (
-            <div className="mt-5 border-t pt-4">
-              <Typography.Title level={5}>Thông tin shipper</Typography.Title>
-              <Select
-                className="w-full"
-                placeholder="Chọn shipper giao hàng"
-                value={orderForm.shipper_id}
-                onChange={(value) => setOrderForm((prev) => ({ ...prev, shipper_id: value }))}
-                showSearch
-                optionFilterProp="label"
-                filterOption={(input, option) => (option?.label || '').toLowerCase().includes(input.toLowerCase())}
-                options={shippers.map((shipper) => ({
-                  value: shipper._id,
-                  label: `${shipper.name} - ${shipper.phone_number} - ${shipper.shipper_code} - ${shipper.shipping_company}`,
-                }))}
-                allowClear
-                disabled={isOrderLocked}
-              />
-              <Button className="mt-2" disabled={isOrderLocked} onClick={() => setIsCreateShipperOpen(true)}>
-                Tạo shipper mới
-              </Button>
-            </div>
-          )}
         </div>
 
         <div className="bg-white p-4 rounded shadow-sm">
@@ -590,22 +495,6 @@ const OrderDetail = () => {
           </div>
         </div>
       </div>
-      <Modal
-        title="Tạo shipper mới"
-        open={isCreateShipperOpen}
-        onCancel={() => setIsCreateShipperOpen(false)}
-        onOk={handleCreateShipper}
-        okText="Lưu shipper"
-        cancelText="Hủy"
-        confirmLoading={isCreatingShipper}
-      >
-        <Space direction="vertical" className="w-full">
-          <Input placeholder="Tên shipper" value={newShipper.name} onChange={(e) => setNewShipper((prev) => ({ ...prev, name: e.target.value }))} />
-          <Input placeholder="Số điện thoại" value={newShipper.phone_number} onChange={(e) => setNewShipper((prev) => ({ ...prev, phone_number: e.target.value }))} />
-          <Input placeholder="Mã shipper" value={newShipper.shipper_code} onChange={(e) => setNewShipper((prev) => ({ ...prev, shipper_code: e.target.value }))} />
-          <Input placeholder="Đơn vị vận chuyển" value={newShipper.shipping_company} onChange={(e) => setNewShipper((prev) => ({ ...prev, shipping_company: e.target.value }))} />
-        </Space>
-      </Modal>
     </div>
   );
 };
