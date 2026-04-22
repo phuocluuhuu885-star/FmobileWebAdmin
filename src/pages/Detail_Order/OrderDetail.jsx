@@ -51,7 +51,6 @@ const OrderDetail = () => {
       custom_price: Number(product.option_id?.price || 0),
     })),
   });
-  const [noteInput, setNoteInput] = useState('');
   const [auditLogs, setAuditLogs] = useState(data.admin_update_logs || []);
   const [isSaving, setIsSaving] = useState(false);
   const [editMode, setEditMode] = useState({
@@ -204,7 +203,6 @@ const OrderDetail = () => {
         custom_name: product.custom_name || '',
         custom_price: Number(product.custom_price || 0),
       })),
-      note: noteInput || '',
     };
 
     try {
@@ -215,7 +213,6 @@ const OrderDetail = () => {
       if (res.data && res.data.result && res.data.result.admin_update_logs) {
         setAuditLogs(res.data.result.admin_update_logs);
       }
-      setNoteInput('');
       dispatch(fetchInvoiceRequest(token));
       notification.success({
         message: 'Thành công',
@@ -444,9 +441,7 @@ const OrderDetail = () => {
           </Button>
 
           <div className="mt-5">
-            <Typography.Title level={5}>Order Ghi chú</Typography.Title>
-            <div className="text-sm bg-gray-100 p-3 rounded mb-3">Thêm ghi chú để lưu vết chỉnh sửa đơn hàng.</div>
-            <textarea className="w-full border p-2 rounded" placeholder="Ghi chú admin..." rows={4} value={noteInput} onChange={(e) => setNoteInput(e.target.value)} />
+            <Typography.Title level={5}>Lịch sử chỉnh sửa</Typography.Title>
             <div className="mt-3 space-y-2 max-h-56 overflow-y-auto">
               {auditLogs.length === 0 ? (
                 <Typography.Text type="secondary">Chưa có lịch sử chỉnh sửa</Typography.Text>
@@ -460,10 +455,10 @@ const OrderDetail = () => {
                       <b>Thời gian:</b> {formattedDate(log.from_time)} - {formattedDate(log.to_time)}
                     </div>
                     <div>
-                      <b>Khoảng xử lý:</b> {log.duration_minutes ?? 0} phút
+                      <b>Hành động:</b> {log.action || 'Không rõ'}
                     </div>
                     <div>
-                      <b>Ghi chú:</b> {log.note || 'Không có ghi chú'}
+                      <b>Chi tiết:</b> {log.details || 'N/A'}
                     </div>
                   </div>
                 ))
