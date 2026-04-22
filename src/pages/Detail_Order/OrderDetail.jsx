@@ -177,13 +177,7 @@ const OrderDetail = () => {
     }));
   };
 
-  const removeProductRow = (rowId) => {
-    if (isOrderLocked) return;
-    setOrderForm((prev) => ({
-      ...prev,
-      productsOrder: prev.productsOrder.filter((row) => row._tempId !== rowId),
-    }));
-  };
+
 
   const handleSaveAll = async () => {
     if (isOrderLocked) {
@@ -352,7 +346,7 @@ const OrderDetail = () => {
                   <th className="p-2 border text-center">Giảm %</th>
                   <th className="p-2 border text-right">Giá</th>
                   <th className="p-2 border text-right">Tổng</th>
-                  <th className="p-2 border text-center">Thao tác</th>
+                  <th className="p-2 border text-right">Thành tiền</th>
                 </tr>
               </thead>
               <tbody>
@@ -397,17 +391,8 @@ const OrderDetail = () => {
                         />
                       </td>
                       <td className="p-2 border text-right">{priceAfter.toLocaleString('vi-VN')} đ</td>
-                      <td className="p-2 border text-center">
-                        {editMode.products && !isOrderLocked ? (
-                          <Popconfirm title="Xóa sản phẩm khỏi đơn hàng?" onConfirm={() => removeProductRow(product._tempId)}>
-                            <Button danger>Xóa</Button>
-                          </Popconfirm>
-                        ) : (
-                          <Button danger disabled>
-                            Xóa
-                          </Button>
-                        )}
-                        <div className="mt-1 text-right">{lineTotal.toLocaleString('vi-VN')} đ</div>
+                      <td className="p-2 border text-right">
+                        <div className="text-right">{lineTotal.toLocaleString('vi-VN')} đ</div>
                       </td>
                     </tr>
                   );
