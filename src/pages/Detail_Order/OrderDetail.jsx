@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm } from 'antd';
+import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm, Modal } from 'antd';
 import moment from 'moment';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -52,7 +52,8 @@ const OrderDetail = () => {
     })),
   });
   const [auditLogs, setAuditLogs] = useState(data.admin_update_logs || []);
-  const [isSaving, setIsSaving] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
+  const [note, setNote] = useState('');
   const [editMode, setEditMode] = useState({
     general: false,
     payment: false,
@@ -83,35 +84,55 @@ const OrderDetail = () => {
 
   const cancelReason = getCancelReason(data);
 
-  const updateStatus = (status, notificationType, successMessage, shouldNavigate = true) => {
-    setOrderForm((prev) => ({ ...prev, status }));
+  const triggerStatusChange = (status, notificationType, successMessage, shouldNavigate = true) => {
+    setConfirmModal({ visible: true, status, type: notificationType, message: successMessage, shouldNavigate });
+    setNote('');
+  };
+
+  const confirmStatusChange = () => {
+    if (confirmModal.status === 'Đã hủy' && !note.trim()) {
+      notification.warning({ message: 'Cảnh báo', description: 'Vui lòng nhập lý do hủy đơn hàng', duration: 3 });
+      return;
+    }
+
+    setOrderForm((prev) => ({ ...prev, status: confirmModal.status }));
     axios
       .put(
         `${import.meta.env.VITE_BASE_URL}order/update-order-status/${data._id}`,
-        { status },
+        { status: confirmModal.status, note: note.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      .then(() => {
+      .then((res) => {
+        if (res.data && res.data.result && res.data.result.admin_update_logs) {
+            setAuditLogs(res.data.result.admin_update_logs);
+        }
         dispatch(fetchInvoiceRequest(token));
         axios
           .post(`${import.meta.env.VITE_BASE_URL}notifi/postnotifi`, {
             receiver_id: data.user_id,
             order_id: data._id,
             content: data.createdAt,
-            type: notificationType,
+            type: confirmModal.type,
           })
           .then(() => {
             notification.success({
               message: 'Thành công',
-              description: successMessage,
+              description: confirmModal.message,
               duration: 3,
             });
-            if (shouldNavigate) {
+            setConfirmModal({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
+            if (confirmModal.shouldNavigate) {
               navigate('/invoice');
             }
           })
           .catch(() => {
             // Error updating notification
+            notification.success({
+              message: 'Thành công',
+              description: confirmModal.message,
+              duration: 3,
+            });
+            setConfirmModal({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
           });
       })
       .catch(() => {
@@ -178,58 +199,7 @@ const OrderDetail = () => {
 
 
 
-  const handleSaveAll = async () => {
-    if (isOrderLocked) {
-      notification.warning({
-        message: 'Đơn hàng đã khóa',
-        description: 'Đơn hàng đang giao nên không thể chỉnh sửa thông tin.',
-        duration: 3,
-      });
-      return;
-    }
-    const payload = {
-      status: orderForm.status,
-      payment_method: orderForm.payment_method,
-      ip: orderForm.ip,
-      payment_status: orderForm.payment_status,
-      delivery_method: orderForm.delivery_method,
-      info_id: {
-        ...orderForm.info_id,
-      },
-      productsOrder: orderForm.productsOrder.map((product) => ({
-        option_id: product.option_id?._id || product.option_id || null,
-        quantity: Number(product.quantity || 1),
-        discount_value: Number(product.discount_value || 0),
-        custom_name: product.custom_name || '',
-        custom_price: Number(product.custom_price || 0),
-      })),
-    };
 
-    try {
-      setIsSaving(true);
-      const res = await axios.put(`${import.meta.env.VITE_BASE_URL}order/update-order/${data._id}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data && res.data.result && res.data.result.admin_update_logs) {
-        setAuditLogs(res.data.result.admin_update_logs);
-      }
-      dispatch(fetchInvoiceRequest(token));
-      notification.success({
-        message: 'Thành công',
-        description: 'Đã cập nhật đầy đủ thông tin đơn hàng',
-        duration: 3,
-      });
-    } catch (err) {
-      console.log(err);
-      notification.error({
-        message: 'Thất bại',
-        description: 'Không thể lưu thay đổi. Vui lòng kiểm tra API update-order.',
-        duration: 3,
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const renderPrice = (price, discountValue) => {
     const discount = discountValue ? (price * discountValue) / 100 : 0;
@@ -407,21 +377,21 @@ const OrderDetail = () => {
             <Button
               block
               disabled={!isWaitConfirm}
-              onClick={() => updateStatus('Chờ giao hàng', 'wfd', 'Xác nhận đơn hàng thành công', false)}
+              onClick={() => triggerStatusChange('Chờ giao hàng', 'wfd', 'Xác nhận đơn hàng thành công', false)}
             >
               Xác nhận đơn hàng
             </Button>
             <Button
               block
               disabled={!isPending}
-              onClick={() => updateStatus('Đang giao hàng', 'delivere', 'Đang giao hàng')}
+              onClick={() => triggerStatusChange('Đang giao hàng', 'delivere', 'Đang giao hàng')}
             >
               Giao hàng
             </Button>
             <Button
               block
               disabled={!isWaitDelivery}
-              onClick={() => updateStatus('Đã giao hàng', 'delivered', 'Giao hàng thành công')}
+              onClick={() => triggerStatusChange('Đã giao hàng', 'delivered', 'Giao hàng thành công')}
             >
               Giao hàng thành công
             </Button>
@@ -429,16 +399,11 @@ const OrderDetail = () => {
               block
               danger
               disabled={!isWaitConfirm}
-              onClick={() => updateStatus('Đã hủy', 'canceled', 'Hủy đơn hàng')}
+              onClick={() => triggerStatusChange('Đã hủy', 'canceled', 'Hủy đơn hàng')}
             >
               Hủy đơn hàng
             </Button>
           </div>
-
-          <Divider />
-          <Button type="primary" block loading={isSaving} onClick={handleSaveAll} disabled={isOrderLocked}>
-            Lưu toàn bộ thay đổi
-          </Button>
 
           <div className="mt-5">
             <Typography.Title level={5}>Lịch sử chỉnh sửa</Typography.Title>
@@ -467,6 +432,27 @@ const OrderDetail = () => {
           </div>
         </div>
       </div>
+      <Modal
+        title={`Xác nhận đổi trạng thái: ${confirmModal.status}`}
+        open={confirmModal.visible}
+        onOk={confirmStatusChange}
+        onCancel={() => setConfirmModal({ visible: false, status: '', type: '', message: '', shouldNavigate: true })}
+        okText="Xác nhận"
+        cancelText="Hủy"
+      >
+        <p>Bạn có chắc chắn muốn chuyển trạng thái thành <b>{confirmModal.status}</b>?</p>
+        <div className="mt-4">
+          <label className="block mb-2 font-medium">
+            {confirmModal.status === 'Đã hủy' ? 'Lý do hủy (bắt buộc):' : 'Ghi chú (tùy chọn):'}
+          </label>
+          <Input.TextArea
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={confirmModal.status === 'Đã hủy' ? 'Nhập lý do hủy đơn hàng' : 'Nhập ghi chú...'}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };
