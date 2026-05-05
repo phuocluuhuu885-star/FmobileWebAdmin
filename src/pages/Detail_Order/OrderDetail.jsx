@@ -274,7 +274,7 @@ const OrderDetail = () => {
                 </>
               ) : isCompleted ? (
                 <Typography.Text className="text-base text-green-600">
-                  Ngày hoàn thành: {formattedDate(data.updatedAt)}
+                  Ngày hoàn thành: {data.completedAt ? formattedDate(data.completedAt) : formattedDate(data.updatedAt)}
                 </Typography.Text>
               ) : (
                 <Typography.Text className="text-base">
