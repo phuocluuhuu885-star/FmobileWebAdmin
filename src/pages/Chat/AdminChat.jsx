@@ -3,6 +3,9 @@ import { Flex, Input, Button, List, Avatar, Typography } from "antd";
 import { SendOutlined, UserOutlined } from "@ant-design/icons";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, push, serverTimestamp } from "firebase/database";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCustomerRequest } from "../../redux/actions/Customer";
+import Cookies from "js-cookie";
 
 const { Text } = Typography;
 
@@ -28,6 +31,20 @@ const AdminChat = () => {
   const [messages, setMessages] = useState([]); // Tin nhắn trong hội thoại
   const [inputValue, setInputValue] = useState("");
   const messageListRef = useRef(null);
+
+  const dispatch = useDispatch();
+  const customerData = useSelector((state) => state.customerReducer.data);
+  const customers = customerData?.result || customerData || [];
+
+  useEffect(() => {
+    dispatch(fetchCustomerRequest("customer", Cookies.get("token")));
+  }, [dispatch]);
+
+  const getCustomerName = (userId) => {
+    if (!customers || customers.length === 0) return userId;
+    const customer = customers.find(c => c._id === userId);
+    return customer ? (customer.username || customer.email || userId) : userId;
+  };
 
   // 1. Lấy danh sách tất cả người dùng có nhắn tin (nhánh 'chats')
   useEffect(() => {
@@ -129,7 +146,7 @@ const AdminChat = () => {
                 >
                   <List.Item.Meta
                     avatar={<Avatar icon={<UserOutlined />} />}
-                    title={user.id}
+                    title={getCustomerName(user.id)}
                     description={
                       <Text ellipsis style={{ width: 150 }}>
                         {user.lastMessage}
@@ -148,7 +165,7 @@ const AdminChat = () => {
             <>
               {/* Header khung chat */}
               <div className="p-4 border-b bg-white">
-                <Text strong>Đang chat với: {selectedUser}</Text>
+                <Text strong>Đang chat với: {getCustomerName(selectedUser)}</Text>
               </div>
 
               {/* Danh sách tin nhắn */}
