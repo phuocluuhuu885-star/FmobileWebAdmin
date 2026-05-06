@@ -32,6 +32,7 @@ const OrderDetail = () => {
 
   const [orderForm, setOrderForm] = useState({
     status: data.status || '',
+    reason: getCancelReason(data),
     payment_method: data.payment_method || 'Chuyển khoản',
     ip: data.ip || '',
     payment_status: !!data.payment_status,
@@ -82,7 +83,7 @@ const OrderDetail = () => {
     return "";
   }; 
 
-  const cancelReason = getCancelReason(data);
+  const cancelReason = orderForm.reason || getCancelReason(data);
 
   const triggerStatusChange = (status, notificationType, successMessage, shouldNavigate = true) => {
     setConfirmModal({ visible: true, status, type: notificationType, message: successMessage, shouldNavigate });
@@ -95,7 +96,7 @@ const OrderDetail = () => {
       return;
     }
 
-    setOrderForm((prev) => ({ ...prev, status: confirmModal.status }));
+    setOrderForm((prev) => ({ ...prev, status: confirmModal.status, reason: confirmModal.status === 'Đã hủy' ? note.trim() : prev.reason }));
     axios
       .put(
         `${import.meta.env.VITE_BASE_URL}order/update-order-status/${data._id}`,
@@ -425,6 +426,11 @@ const OrderDetail = () => {
                     <div>
                       <b>Chi tiết:</b> {log.details || 'N/A'}
                     </div>
+                    {log.note && (
+                      <div>
+                        <b>Ghi chú:</b> {log.note}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
