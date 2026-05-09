@@ -12,7 +12,7 @@ import {
   notification,
 } from "antd";
 import moment from "moment";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { XCircleIcon } from "@heroicons/react/24/outline";
 import { DownOutlined, FilterFilled } from "@ant-design/icons";
@@ -23,9 +23,18 @@ import { useNavigate } from "react-router-dom";
 
 const Invoice = () => {
   const invoiceData = useSelector((state) => state.invoiceReducer.data);
+  const dispatch = useDispatch();
   const [openDialogDetail, setOpenDialogDetail] = useState(false);
   const [selectInvoiceItem, setSelectInvoiceItem] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = Cookies.get("token");
+    if (token) {
+      dispatch(fetchInvoiceRequest(token));
+    }
+  }, [dispatch]);
+
 
   const showModelDetail = (item) => {
     navigate('/invoice/detail', { state: { invoice: item } });

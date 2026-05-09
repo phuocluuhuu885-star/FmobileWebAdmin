@@ -91,11 +91,70 @@ const EditProduct = () => {
       name: "status",
       rules: [{ required: true, message: "Nhập trạng thái sản phẩm" }],
       component: (
-       <Input
+        <Select
+          className="w-[50%]"
           size="middle"
-           className="w-[50%]"
-          placeholder="Nhập trạng thái sản phẩm (ví dụ: mới/cũ/like new...)"
-        />
+          placeholder="Chọn trạng thái sản phẩm"
+        >
+          <Select.Option value="mới">Mới</Select.Option>
+          <Select.Option value="cũ">Cũ</Select.Option>
+        </Select>
+      ),
+    },
+    {
+      label: "Độ mới (%)",
+      name: "condition_percent",
+      component: (
+        <Select
+          className="w-[50%]"
+          size="middle"
+          placeholder="Chọn phần trăm độ mới (máy cũ)"
+          allowClear
+        >
+          <Select.Option value="100">100%</Select.Option>
+          <Select.Option value="99">99%</Select.Option>
+          <Select.Option value="98">98%</Select.Option>
+          <Select.Option value="95">95%</Select.Option>
+        </Select>
+      ),
+    },
+    {
+      label: "Tình trạng Pin (%)",
+      name: "battery_health",
+      component: (
+        <Input size="middle" className="w-[50%]" placeholder="Nhập phần trăm Pin (VD: 90%)" />
+      ),
+    },
+    {
+      label: "Tình trạng sửa chữa",
+      name: "is_original",
+      component: (
+        <Select
+          className="w-[50%]"
+          size="middle"
+          placeholder="Zin hay đã thay thế?"
+          allowClear
+        >
+          <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
+          <Select.Option value="Đã thay linh kiện">Đã thay linh kiện</Select.Option>
+        </Select>
+      ),
+    },
+    {
+      label: "Cam kết bảo hành",
+      name: "warranty_time",
+      component: (
+        <Select
+          className="w-[50%]"
+          size="middle"
+          placeholder="Chọn thời gian bảo hành"
+          allowClear
+        >
+          <Select.Option value="1 tháng">1 tháng</Select.Option>
+          <Select.Option value="3 tháng">3 tháng</Select.Option>
+          <Select.Option value="6 tháng">6 tháng</Select.Option>
+          <Select.Option value="12 tháng">12 tháng</Select.Option>
+        </Select>
       ),
     },
     {
@@ -128,6 +187,20 @@ const EditProduct = () => {
         </Select>
       ),
     },
+    {
+      label: "Dung lượng RAM (GB)",
+      name: "ram",
+      component: (
+        <InputNumber size="middle" className="w-[50%]" placeholder="VD: 8" min={1} />
+      ),
+    },
+    {
+      label: "Dung lượng ROM (GB)",
+      name: "rom",
+      component: (
+        <InputNumber size="middle" className="w-[50%]" placeholder="VD: 256" min={1} />
+      ),
+    },
     
   ];
   return (
@@ -157,6 +230,10 @@ const EditProduct = () => {
             manufacturer: data ? data?.result.manufacturer : "",
             category_id: data ? data?.result.category_id?.name : undefined,
             status: data ? data?.result.status : undefined,
+            condition_percent: data ? data?.result.condition_percent : undefined,
+            battery_health: data ? data?.result.battery_health : "",
+            is_original: data ? data?.result.is_original : undefined,
+            warranty_time: data ? data?.result.warranty_time : undefined,
             description: data ? data?.result.description : "",
             screen: data ? data?.result.screen : "",
             camera: data ? data?.result.camera : "",

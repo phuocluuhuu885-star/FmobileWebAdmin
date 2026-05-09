@@ -265,6 +265,38 @@ const ProductDetail = () => {
                 </>
               )}
             </Text>
+            <Text className="text-base">
+              {data?.result.condition_percent && (
+                <>
+                  <span className="font-bold">Độ mới:</span>{" "}
+                  {data?.result.condition_percent}%
+                </>
+              )}
+            </Text>
+            <Text className="text-base">
+              {data?.result.battery_health && (
+                <>
+                  <span className="font-bold">Tình trạng Pin:</span>{" "}
+                  {data?.result.battery_health}
+                </>
+              )}
+            </Text>
+            <Text className="text-base">
+              {data?.result.is_original && (
+                <>
+                  <span className="font-bold">Sửa chữa:</span>{" "}
+                  {data?.result.is_original}
+                </>
+              )}
+            </Text>
+            <Text className="text-base">
+              {data?.result.warranty_time && (
+                <>
+                  <span className="font-bold">Bảo hành:</span>{" "}
+                  {data?.result.warranty_time}
+                </>
+              )}
+            </Text>
             
             <Text className="text-base">
               {data?.result.screen && (
