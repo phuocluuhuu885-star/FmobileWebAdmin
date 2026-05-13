@@ -1,48 +1,39 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Divider, Popconfirm, Modal } from 'antd';
+import { Button, Row, Col, Typography, notification, Input, InputNumber, Space, Modal, Alert } from 'antd';
 import moment from 'moment';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { fetchInvoiceRequest } from '../../redux/actions/Invoice';
+import { normalizeIsBlacklisted, normalizeTrustScore } from '../../utils/userTrust';
+import { TrustScoreAndBlacklist, TRUST_RULES_SHORT_VI } from '../../components/TrustCustomerBadges';
 
-const OrderDetail = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const myProfile = useSelector((state) => state.myProfileReducer.data);
-  const data = location.state?.invoice;
-
-  if (!data) {
-    return (
-      <div className="p-6">
-        <Typography.Title level={4}>Không tìm thấy đơn hàng</Typography.Title>
-        <Button onClick={() => navigate('/invoice')}>Về danh sách hóa đơn</Button>
-      </div>
-    );
+function buildOrderFormFromInvoice(d) {
+  if (!d) {
+    return {
+      status: '',
+      payment_method: 'Chuyển khoản',
+      ip: '',
+      payment_status: false,
+      delivery_method: 'Tiêu chuẩn',
+      info_id: { name: '', phone_number: '', address: '', email: '' },
+      productsOrder: [],
+    };
   }
-
-  const formattedDate = (date) => moment(date).format('HH:mm DD/MM/YYYY');
-  const token = Cookies.get('token');
-  const adminName = myProfile?.data?.username || myProfile?.data?.full_name || 'Unknown admin';
-
-  const [editingStartAt] = useState(new Date().toISOString());
-
-
-  const [orderForm, setOrderForm] = useState({
-    status: data.status || '',
-    payment_method: data.payment_method || 'Chuyển khoản',
-    ip: data.ip || '',
-    payment_status: !!data.payment_status,
-    delivery_method: data.delivery_method || 'Tiêu chuẩn',
+  return {
+    status: d.status || '',
+    payment_method: d.payment_method || 'Chuyển khoản',
+    ip: d.ip || '',
+    payment_status: !!d.payment_status,
+    delivery_method: d.delivery_method || 'Tiêu chuẩn',
     info_id: {
-      name: data.info_id?.name || '',
-      phone_number: data.info_id?.phone_number || '',
-      address: data.info_id?.address || '',
-      email: data.info_id?.email || '',
+      name: d.info_id?.name || '',
+      phone_number: d.info_id?.phone_number || '',
+      address: d.info_id?.address || '',
+      email: d.info_id?.email || '',
     },
-    productsOrder: (data.productsOrder || []).map((product, idx) => ({
+    productsOrder: (d.productsOrder || []).map((product, idx) => ({
       _tempId: `${product._id || product.option_id?._id || idx}-${idx}`,
       option_id: product.option_id || null,
       quantity: Number(product.quantity || 1),
@@ -50,10 +41,24 @@ const OrderDetail = () => {
       custom_name: product.option_id?.product_id?.name || '',
       custom_price: Number(product.option_id?.price || 0),
     })),
-  });
-  const [auditLogs, setAuditLogs] = useState(data.admin_update_logs || []);
+  };
+}
+
+const OrderDetail = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const data = location.state?.invoice;
+
+  const formattedDate = (date) => moment(date).format('HH:mm DD/MM/YYYY');
+  const token = Cookies.get('token');
+
+  const [orderForm, setOrderForm] = useState(() => buildOrderFormFromInvoice(location.state?.invoice));
+  const [auditLogs, setAuditLogs] = useState(() => location.state?.invoice?.admin_update_logs || []);
   const [confirmModal, setConfirmModal] = useState({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
   const [note, setNote] = useState('');
+  /** user_id populate từ GET order/detail-order */
+  const [orderBuyer, setOrderBuyer] = useState(null);
   const [editMode, setEditMode] = useState({
     general: false,
     payment: false,
@@ -64,6 +69,7 @@ const OrderDetail = () => {
   const isPending = orderForm.status === 'Chờ giao hàng';
   const isWaitConfirm = orderForm.status === 'Chờ xác nhận';
   const isWaitDelivery = orderForm.status === 'Đang giao hàng';
+  const canCancelOrder = isWaitConfirm || isPending || isWaitDelivery;
   const isOrderLocked = orderForm.status === 'Đang giao hàng';
   const isCancelled = orderForm.status === 'Đã hủy';
   const isCompleted = orderForm.status === 'Đã giao hàng';
@@ -84,6 +90,28 @@ const OrderDetail = () => {
 
   const cancelReason = getCancelReason(data);
 
+  useEffect(() => {
+    const orderId = data?._id;
+    if (!orderId || !token) return;
+    axios
+      .get(`${import.meta.env.VITE_BASE_URL}order/detail-order/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const result = res.data?.result ?? res.data;
+        const uid = result?.user_id;
+        if (uid && typeof uid === 'object') setOrderBuyer(uid);
+        else setOrderBuyer(null);
+      })
+      .catch(() => setOrderBuyer(null));
+  }, [data?._id, token]);
+
+  const buyerFromList =
+    data?.user_id && typeof data.user_id === 'object' ? data.user_id : null;
+  const buyer = orderBuyer || buyerFromList;
+  const buyerTrust = normalizeTrustScore(buyer?.trust_score, 100);
+  const buyerBl = normalizeIsBlacklisted(buyer?.is_blacklisted);
+
   const triggerStatusChange = (status, notificationType, successMessage, shouldNavigate = true) => {
     setConfirmModal({ visible: true, status, type: notificationType, message: successMessage, shouldNavigate });
     setNote('');
@@ -96,10 +124,15 @@ const OrderDetail = () => {
     }
 
     setOrderForm((prev) => ({ ...prev, status: confirmModal.status }));
+    const payload =
+      confirmModal.status === 'Đã hủy'
+        ? { status: confirmModal.status, note: note.trim(), reason: note.trim() }
+        : { status: confirmModal.status, note: note.trim() || undefined };
+
     axios
       .put(
         `${import.meta.env.VITE_BASE_URL}order/update-order-status/${data._id}`,
-        { status: confirmModal.status, note: note.trim() },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => {
@@ -109,7 +142,8 @@ const OrderDetail = () => {
         dispatch(fetchInvoiceRequest(token));
         axios
           .post(`${import.meta.env.VITE_BASE_URL}notifi/postnotifi`, {
-            receiver_id: data.user_id,
+            receiver_id:
+              typeof data.user_id === 'object' && data.user_id ? data.user_id._id : data.user_id,
             order_id: data._id,
             content: data.createdAt,
             type: confirmModal.type,
@@ -207,6 +241,15 @@ const OrderDetail = () => {
     return Math.max(finalPrice, 0);
   };
 
+  if (!data) {
+    return (
+      <div className="p-6">
+        <Typography.Title level={4}>Không tìm thấy đơn hàng</Typography.Title>
+        <Button onClick={() => navigate('/invoice')}>Về danh sách hóa đơn</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-start mb-6">
@@ -217,6 +260,28 @@ const OrderDetail = () => {
           <Typography.Text className="text-gray-500">
             Thanh toán qua {orderForm.payment_method || 'Chuyển khoản'} IP khách: {orderForm.ip || '127.0.0.1'}
           </Typography.Text>
+          {buyer && (
+            <div className="mt-3 max-w-xl">
+              <Typography.Title level={5} className="!mb-2">
+                Khách hàng & tin cậy
+              </Typography.Title>
+              <TrustScoreAndBlacklist trustScore={buyerTrust} isBlacklisted={buyerBl} />
+              <div className="text-sm text-gray-600 mt-2">
+                {buyer.email && <span>Email: {buyer.email} · </span>}
+                {buyer.username && <span>Tài khoản: {buyer.username}</span>}
+              </div>
+              <div className="mt-2 text-xs text-gray-500">{TRUST_RULES_SHORT_VI}</div>
+            </div>
+          )}
+          {buyerBl && (
+            <Alert
+              className="mt-3 max-w-xl"
+              type="warning"
+              showIcon
+              message="Khách blacklist — hạn chế COD trên app/mobile"
+              description="Ứng dụng khách sẽ không cho đặt COD; cần thanh toán trước (ví dụ ZaloPay). Kiểm tra phương thức thanh toán trước khi giao hàng."
+            />
+          )}
         </div>
         <Button type="default" onClick={() => navigate('/invoice')}>
           Quay lại
@@ -398,7 +463,7 @@ const OrderDetail = () => {
             <Button
               block
               danger
-              disabled={!isWaitConfirm}
+              disabled={!canCancelOrder}
               onClick={() => triggerStatusChange('Đã hủy', 'canceled', 'Hủy đơn hàng')}
             >
               Hủy đơn hàng
@@ -441,6 +506,16 @@ const OrderDetail = () => {
         cancelText="Hủy"
       >
         <p>Bạn có chắc chắn muốn chuyển trạng thái thành <b>{confirmModal.status}</b>?</p>
+        {confirmModal.status === 'Đã hủy' &&
+          (orderForm.status === 'Chờ giao hàng' || orderForm.status === 'Đang giao hàng') && (
+            <Alert
+              type="warning"
+              showIcon
+              className="mt-3"
+              message="Cảnh báo bom hàng"
+              description="Hủy từ trạng thái «Chờ giao hàng» hoặc «Đang giao hàng» sẽ bị server ghi nhận bom hàng và trừ điểm tin cậy khách (theo cấu hình)."
+            />
+          )}
         <div className="mt-4">
           <label className="block mb-2 font-medium">
             {confirmModal.status === 'Đã hủy' ? 'Lý do hủy (bắt buộc):' : 'Ghi chú (tùy chọn):'}
