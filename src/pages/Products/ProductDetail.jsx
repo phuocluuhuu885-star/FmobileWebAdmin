@@ -163,20 +163,20 @@ const ProductDetail = () => {
                     src={option.image}
                     className="w-28 h-28 object-contain mr-1"
                   />
-                  <div className="flex flex-col">
-                    <Text className="text-base">
-                      Màu sắc: {option.name_color}
-                    </Text>
-                    <Text className="text-base">
-                      Giá tiền gốc: {option.price.toLocaleString("vi-VN")} đ
-                    </Text>
-                    <Text className="text-base">
-                      Số lượng trong kho: {option.quantity}
-                    </Text>
-                    <Text className="text-base">
-                      Số lượng đã bán: {option.soldQuantity}
-                    </Text>
-                  </div>
+                    <div className="flex flex-col ml-2">
+                      <Text className="text-base font-semibold">
+                        {option.name_color} - {option.storage_capacity}
+                      </Text>
+                      <Text className="text-sm text-gray-500">
+                        Giá: {option.price.toLocaleString("vi-VN")} đ
+                      </Text>
+                      <Text className="text-sm text-gray-500">
+                        Kho: {option.quantity} | Đã bán: {option.soldQuantity}
+                      </Text>
+                      <Text className="text-xs text-blue-500">
+                        {option.condition_percent}% - {option.battery_health} - {option.is_original} - BH {option.warranty_time}
+                      </Text>
+                    </div>
                   {option.hot_option ? (
                     <img
                       src="/hot.png"
@@ -452,6 +452,11 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     if (method === "update" && data) {
       form.setFieldsValue({
         name_color: data.name_color ?? "",
+        storage_capacity: data.storage_capacity ?? "",
+        condition_percent: data.condition_percent ?? "",
+        battery_health: data.battery_health ?? "",
+        is_original: data.is_original ?? "",
+        warranty_time: data.warranty_time ?? "",
         price: data.price ?? 0,
         quantity: data.quantity ?? 0,
         hot_option: Boolean(data.hot_option),
@@ -461,6 +466,11 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
       form.resetFields();
       form.setFieldsValue({
         name_color: "",
+        storage_capacity: "",
+        condition_percent: "",
+        battery_health: "",
+        is_original: "",
+        warranty_time: "",
         price: 0,
         quantity: 0,
         hot_option: false,
@@ -476,6 +486,11 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
       fromData.append("image", image);
     }
     fromData.append("name_color", value.name_color);
+    fromData.append("storage_capacity", value.storage_capacity ?? "");
+    fromData.append("condition_percent", value.condition_percent ?? "");
+    fromData.append("battery_health", value.battery_health ?? "");
+    fromData.append("is_original", value.is_original ?? "");
+    fromData.append("warranty_time", value.warranty_time ?? "");
     fromData.append("product_id", productId);
     fromData.append("price", value.price);
     // Ẩn giảm giá trên UI, mặc định gửi 0
@@ -578,6 +593,56 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           >
             <Input
               placeholder="nhập tên màu của option sản phẩm"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item
+            label={"Dung lượng"}
+            name={"storage_capacity"}
+            initialValue={data ? data.storage_capacity : null}
+          >
+            <Input
+              placeholder="Ví dụ: 128GB, 256GB"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item
+            label={"Ngoại hình"}
+            name={"condition_percent"}
+            initialValue={data ? data.condition_percent : null}
+          >
+            <Input
+              placeholder="Ví dụ: 99%, 98%"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item
+            label={"Pin"}
+            name={"battery_health"}
+            initialValue={data ? data.battery_health : null}
+          >
+            <Input
+              placeholder="Ví dụ: 100%, 9x%"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item
+            label={"Tình trạng"}
+            name={"is_original"}
+            initialValue={data ? data.is_original : null}
+          >
+            <Input
+              placeholder="Ví dụ: Zin all, Thay pin"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item
+            label={"Bảo hành"}
+            name={"warranty_time"}
+            initialValue={data ? data.warranty_time : null}
+          >
+            <Input
+              placeholder="Ví dụ: 6 tháng, 12 tháng"
               size="middle"
             />
           </Form.Item>
