@@ -24,6 +24,12 @@ const CreateNewOption = ({ productId }) => {
     fromData.append("name_color", value.name_color ?? "");
     fromData.append("product_id", productId);
     fromData.append("price", value.price ?? 0);
+    fromData.append("ram", value.ram ?? "");
+    fromData.append("storage_capacity", value.storage_capacity ?? "");
+    fromData.append("condition_percent", value.condition_percent ?? "");
+    fromData.append("battery_health", value.battery_health ?? "");
+    fromData.append("is_original", value.is_original ?? "");
+    fromData.append("warranty_time", value.warranty_time ?? "");
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity ?? 0);
@@ -71,6 +77,48 @@ const CreateNewOption = ({ productId }) => {
           <Form.Item label={"Màu"} name={"name_color"}>
             <Input
               placeholder="nhập tên màu của option sản phẩm"
+              size="middle"
+              className="w-[50%]"
+            />
+          </Form.Item>
+          <Form.Item label={"RAM"} name={"ram"}>
+            <Input
+              placeholder="Ví dụ: 8GB"
+              size="middle"
+              className="w-[50%]"
+            />
+          </Form.Item>
+          <Form.Item label={"Dung lượng (ROM)"} name={"storage_capacity"}>
+            <Input
+              placeholder="Ví dụ: 128GB"
+              size="middle"
+              className="w-[50%]"
+            />
+          </Form.Item>
+          <Form.Item label={"Độ mới (%)"} name={"condition_percent"}>
+            <Input
+              placeholder="Ví dụ: 99"
+              size="middle"
+              className="w-[50%]"
+            />
+          </Form.Item>
+          <Form.Item label={"Tình trạng Pin"} name={"battery_health"}>
+            <Input
+              placeholder="Ví dụ: 95"
+              size="middle"
+              className="w-[50%]"
+            />
+          </Form.Item>
+          <Form.Item label={"Nguồn gốc"} name={"is_original"}>
+            <Input
+              placeholder="Ví dụ: Zin nguyên bản"
+              size="middle"
+              className="w-[50%]"
+            />
+          </Form.Item>
+          <Form.Item label={"Bảo hành"} name={"warranty_time"}>
+            <Input
+              placeholder="Ví dụ: 6 tháng"
               size="middle"
               className="w-[50%]"
             />

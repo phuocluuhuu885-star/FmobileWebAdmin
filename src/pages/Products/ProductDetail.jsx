@@ -167,6 +167,12 @@ const ProductDetail = () => {
                     <Text className="text-base">
                       Màu sắc: {option.name_color}
                     </Text>
+                    {option.ram && <Text className="text-base">RAM: {option.ram}</Text>}
+                    {option.storage_capacity && <Text className="text-base">Bộ nhớ: {option.storage_capacity}</Text>}
+                    {option.condition_percent && <Text className="text-base">Độ mới: {option.condition_percent}%</Text>}
+                    {option.battery_health && <Text className="text-base">Pin: {option.battery_health}%</Text>}
+                    {option.is_original && <Text className="text-base">Nguồn gốc: {option.is_original}</Text>}
+                    {option.warranty_time && <Text className="text-base">Bảo hành: {option.warranty_time}</Text>}
                     <Text className="text-base">
                       Giá tiền gốc: {option.price.toLocaleString("vi-VN")} đ
                     </Text>
@@ -265,38 +271,6 @@ const ProductDetail = () => {
                 </>
               )}
             </Text>
-            <Text className="text-base">
-              {data?.result.condition_percent && (
-                <>
-                  <span className="font-bold">Độ mới:</span>{" "}
-                  {data?.result.condition_percent}%
-                </>
-              )}
-            </Text>
-            <Text className="text-base">
-              {data?.result.battery_health && (
-                <>
-                  <span className="font-bold">Tình trạng Pin:</span>{" "}
-                  {data?.result.battery_health}
-                </>
-              )}
-            </Text>
-            <Text className="text-base">
-              {data?.result.is_original && (
-                <>
-                  <span className="font-bold">Sửa chữa:</span>{" "}
-                  {data?.result.is_original}
-                </>
-              )}
-            </Text>
-            <Text className="text-base">
-              {data?.result.warranty_time && (
-                <>
-                  <span className="font-bold">Bảo hành:</span>{" "}
-                  {data?.result.warranty_time}
-                </>
-              )}
-            </Text>
             
             <Text className="text-base">
               {data?.result.screen && (
@@ -333,20 +307,6 @@ const ProductDetail = () => {
               {data?.result.gpu && (
                 <>
                   <span className="font-bold">gpu:</span> {data.result.gpu}
-                </>
-              )}
-            </Text>
-            <Text className="text-base">
-              {data?.result.ram && (
-                <>
-                  <span className="font-bold">ram:</span> {data.result.ram} GB
-                </>
-              )}
-            </Text>
-            <Text className="text-base">
-              {data?.result.rom && (
-                <>
-                  <span className="font-bold">rom:</span> {data.result.rom} GB
                 </>
               )}
             </Text>
@@ -455,6 +415,12 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
         price: data.price ?? 0,
         quantity: data.quantity ?? 0,
         hot_option: Boolean(data.hot_option),
+        ram: data.ram ?? "",
+        storage_capacity: data.storage_capacity ?? "",
+        condition_percent: data.condition_percent ?? "",
+        battery_health: data.battery_health ?? "",
+        is_original: data.is_original ?? "",
+        warranty_time: data.warranty_time ?? "",
       });
     } else {
       // Khi thêm option mới, luôn clear dữ liệu option cũ.
@@ -464,6 +430,12 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
         price: 0,
         quantity: 0,
         hot_option: false,
+        ram: "",
+        storage_capacity: "",
+        condition_percent: "",
+        battery_health: "",
+        is_original: "",
+        warranty_time: "",
       });
       setImage(null);
     }
@@ -478,6 +450,12 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     fromData.append("name_color", value.name_color);
     fromData.append("product_id", productId);
     fromData.append("price", value.price);
+    fromData.append("ram", value.ram ?? "");
+    fromData.append("storage_capacity", value.storage_capacity ?? "");
+    fromData.append("condition_percent", value.condition_percent ?? "");
+    fromData.append("battery_health", value.battery_health ?? "");
+    fromData.append("is_original", value.is_original ?? "");
+    fromData.append("warranty_time", value.warranty_time ?? "");
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity);
@@ -578,6 +556,42 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           >
             <Input
               placeholder="nhập tên màu của option sản phẩm"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item label={"RAM"} name={"ram"}>
+            <Input
+              placeholder="Ví dụ: 8GB"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item label={"Dung lượng (ROM)"} name={"storage_capacity"}>
+            <Input
+              placeholder="Ví dụ: 128GB"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item label={"Độ mới (%)"} name={"condition_percent"}>
+            <Input
+              placeholder="Ví dụ: 99"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item label={"Tình trạng Pin"} name={"battery_health"}>
+            <Input
+              placeholder="Ví dụ: 95"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item label={"Nguồn gốc"} name={"is_original"}>
+            <Input
+              placeholder="Ví dụ: Zin nguyên bản"
+              size="middle"
+            />
+          </Form.Item>
+          <Form.Item label={"Bảo hành"} name={"warranty_time"}>
+            <Input
+              placeholder="Ví dụ: 6 tháng"
               size="middle"
             />
           </Form.Item>
