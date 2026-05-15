@@ -5,6 +5,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Select,
   notification,
 } from "antd";
 import axios from "axios";
@@ -29,7 +30,7 @@ const CreateNewOption = ({ productId }) => {
     fromData.append("condition_percent", value.condition_percent ?? "");
     fromData.append("battery_health", value.battery_health ?? "");
     fromData.append("is_original", value.is_original ?? "");
-    fromData.append("warranty_time", value.warranty_time ?? "");
+    fromData.append("screen", value.screen ?? "");
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity ?? 0);
@@ -82,43 +83,45 @@ const CreateNewOption = ({ productId }) => {
             />
           </Form.Item>
           <Form.Item label={"RAM"} name={"ram"}>
-            <Input
-              placeholder="Ví dụ: 8GB"
-              size="middle"
-              className="w-[50%]"
-            />
+            <Select placeholder="Chọn RAM" className="w-[50%]">
+              <Select.Option value="4GB">4GB</Select.Option>
+              <Select.Option value="8GB">8GB</Select.Option>
+              <Select.Option value="12GB">12GB</Select.Option>
+              <Select.Option value="16GB">16GB</Select.Option>
+            </Select>
           </Form.Item>
           <Form.Item label={"Dung lượng (ROM)"} name={"storage_capacity"}>
-            <Input
-              placeholder="Ví dụ: 128GB"
-              size="middle"
-              className="w-[50%]"
-            />
+            <Select placeholder="Chọn ROM" className="w-[50%]">
+              <Select.Option value="64GB">64GB</Select.Option>
+              <Select.Option value="128GB">128GB</Select.Option>
+              <Select.Option value="256GB">256GB</Select.Option>
+              <Select.Option value="512GB">512GB</Select.Option>
+              <Select.Option value=">=1TB">&gt;=1TB</Select.Option>
+            </Select>
           </Form.Item>
-          <Form.Item label={"Độ mới (%)"} name={"condition_percent"}>
-            <Input
-              placeholder="Ví dụ: 99"
-              size="middle"
-              className="w-[50%]"
-            />
+          <Form.Item label={"Độ mới"} name={"condition_percent"}>
+            <Select placeholder="Chọn độ mới" className="w-[50%]">
+              <Select.Option value="95%">95%</Select.Option>
+              <Select.Option value="98%">98%</Select.Option>
+              <Select.Option value="99%">99%</Select.Option>
+            </Select>
           </Form.Item>
           <Form.Item label={"Tình trạng Pin"} name={"battery_health"}>
-            <Input
-              placeholder="Ví dụ: 95"
-              size="middle"
-              className="w-[50%]"
-            />
+            <Select placeholder="Chọn tình trạng Pin" className="w-[50%]">
+              <Select.Option value="<80%">&lt;80%</Select.Option>
+              <Select.Option value="80% - 90%">80% - 90%</Select.Option>
+              <Select.Option value=">90%">&gt;90%</Select.Option>
+            </Select>
           </Form.Item>
           <Form.Item label={"Nguồn gốc"} name={"is_original"}>
-            <Input
-              placeholder="Ví dụ: Zin nguyên bản"
-              size="middle"
-              className="w-[50%]"
-            />
+            <Select placeholder="Chọn nguồn gốc" className="w-[50%]">
+              <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
+              <Select.Option value="Không zin">Không zin</Select.Option>
+            </Select>
           </Form.Item>
-          <Form.Item label={"Bảo hành"} name={"warranty_time"}>
+          <Form.Item label={"Màn hình"} name={"screen"}>
             <Input
-              placeholder="Ví dụ: 6 tháng"
+              placeholder="Ví dụ: 6.1 inch OLED"
               size="middle"
               className="w-[50%]"
             />
