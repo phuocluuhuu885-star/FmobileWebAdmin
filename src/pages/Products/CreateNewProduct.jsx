@@ -131,12 +131,6 @@ const CreateNewProduct = () => {
         </Select>
       ),
     },
-    {
-      label: "Mô tả sản phẩm",
-      name: "description",
-      rules: [{ required: true, message: "Nhập mô tả" }],
-      component: <Input.TextArea rows={5} size="middle" placeholder="Mô tả sản phẩm" />,
-    },
   ];
 
   return (

@@ -102,19 +102,6 @@ const EditProduct = () => {
       ),
     },
     {
-      label: "Mô tả sản phẩm",
-      name: "description",
-      rules: [{ required: true, message: "Nhập mô tả" }],
-      component: (
-        <Input.TextArea
-          rows={5}
-          size="middle"
-          className="w-[70%]"
-          placeholder="Mô tả sản phẩm"
-        />
-      ),
-    },
-    {
       label: "Hệ điều hành sản phẩm",
       name: "operatingSystem",
       rules: [{ required: true, message: "Chọn hệ điều hành sản phẩm" }],
@@ -160,7 +147,7 @@ const EditProduct = () => {
             manufacturer: data ? data?.result.manufacturer : "",
             category_id: data ? data?.result.category_id?.name : undefined,
             status: data ? data?.result.status : undefined,
-            description: data ? data?.result.description : "",
+
             screen: data ? data?.result.screen : "",
             camera: data ? data?.result.camera : "",
             chipset: data ? data?.result.chipset : "",

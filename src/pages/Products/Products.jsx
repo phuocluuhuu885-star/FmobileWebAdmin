@@ -294,7 +294,7 @@ const DialogUpateProduct = ({ productId, open, close }) => {
             manufacturer: d.manufacturer,
             category_id: d.category_id?._id || d.category_id,
             status: d.status,
-            description: d.description,
+
             operatingSystem: d.operatingSystem,
           });
         });
@@ -323,7 +323,7 @@ const DialogUpateProduct = ({ productId, open, close }) => {
           <Select options={dataCategory?.data?.map((c) => ({ label: c.name, value: c._id }))} />
         </Form.Item>
         <Form.Item name="status" label="Trạng thái"><Input /></Form.Item>
-        <Form.Item name="description" label="Mô tả"><Input.TextArea rows={4} /></Form.Item>
+
       </Form>
     </Modal>
   );
