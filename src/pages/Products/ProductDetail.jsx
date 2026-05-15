@@ -170,9 +170,9 @@ const ProductDetail = () => {
                     </Text>
                     {option.ram && <Text className="text-base">RAM: {option.ram}</Text>}
                     {option.storage_capacity && <Text className="text-base">Bộ nhớ: {option.storage_capacity}</Text>}
-                    {option.condition_percent && <Text className="text-base">Độ mới: {option.condition_percent}%</Text>}
-                    {option.battery_health && <Text className="text-base">Pin: {option.battery_health}%</Text>}
-                    {option.is_original && <Text className="text-base">Nguồn gốc: {option.is_original}</Text>}
+                    {option.condition_percent && <Text className="text-base">Độ mới: {option.condition_percent}</Text>}
+                    {option.battery_health && <Text className="text-base">Pin: {option.battery_health}</Text>}
+                    {option.is_original && <Text className="text-base">Tình trạng: {option.is_original}</Text>}
                     {option.warranty_time && <Text className="text-base">Bảo hành: {option.warranty_time}</Text>}
                     <Text className="text-base">
                       Giá tiền gốc: {option.price.toLocaleString("vi-VN")} đ
@@ -407,6 +407,11 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     (state) => state.selectedOptionReducer.selectedOption
   );
 
+  const productData = useSelector((state) => state.productDetailReducer.data);
+  const existingColors = productData?.result?.option
+    ? [...new Set(productData.result.option.map(opt => opt.name_color))]
+    : [];
+
   useEffect(() => {
     if (!open) return;
 
@@ -448,7 +453,8 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     if (image) {
       fromData.append("image", image);
     }
-    fromData.append("name_color", value.name_color);
+    const selectedColor = Array.isArray(value.name_color) ? value.name_color[0] : value.name_color;
+    fromData.append("name_color", selectedColor ?? "");
     fromData.append("product_id", productId);
     fromData.append("price", value.price);
     fromData.append("ram", value.ram ?? "");
@@ -456,7 +462,7 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     fromData.append("condition_percent", value.condition_percent ?? "");
     fromData.append("battery_health", value.battery_health ?? "");
     fromData.append("is_original", value.is_original ?? "");
-    fromData.append("screen", value.screen ?? "");
+    fromData.append("screen", value.screen ? `${value.screen} inch` : "");
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity);
@@ -484,7 +490,7 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
             setLoading(false);
             notification.error({
               message: "Thất Bại",
-              description: "Thêm thể loại thất bại",
+              description: error.response?.data?.message || "Thêm thể loại thất bại",
               duration: 3,
               type: "error",
             });
@@ -514,7 +520,7 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
             setLoading(false);
             notification.error({
               message: "Thất Bại",
-              description: "Sửa thể loại thất bại",
+              description: error.response?.data?.message || "Sửa thể loại thất bại",
               duration: 3,
               type: "error",
             });
@@ -553,12 +559,22 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
           <Form.Item
             label={"Màu"}
             name={"name_color"}
-            initialValue={data ? data.name_color : null}
           >
-            <Input
-              placeholder="nhập tên màu của option sản phẩm"
+            <Select
+              mode="tags"
+              placeholder="Chọn màu có sẵn hoặc gõ màu mới rồi nhấn Enter"
               size="middle"
-            />
+              className="w-full"
+              onChange={(values) => {
+                // Chỉ lấy giá trị cuối cùng được chọn/nhập để đảm bảo luôn là 1 màu
+                const lastValue = values[values.length - 1];
+                form.setFieldsValue({ name_color: lastValue ? [lastValue] : [] });
+              }}
+            >
+              {existingColors.map(color => (
+                <Select.Option key={color} value={color}>{color}</Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item label={"RAM"} name={"ram"}>
             <Select placeholder="Chọn RAM" className="w-full">
@@ -591,15 +607,17 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
               <Select.Option value=">90%">&gt;90%</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item label={"Nguồn gốc"} name={"is_original"}>
-            <Select placeholder="Chọn nguồn gốc" className="w-full">
+          <Form.Item label={"Tình trạng máy"} name={"is_original"}>
+            <Select placeholder="Chọn tình trạng máy" className="w-full">
               <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
-              <Select.Option value="Không zin">Không zin</Select.Option>
+              <Select.Option value="Đã thay màn">Đã thay màn</Select.Option>
+              <Select.Option value="Đã thay pin">Đã thay pin</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item label={"Màn hình"} name={"screen"}>
             <Input
-              placeholder="Ví dụ: 6.1 inch OLED"
+              placeholder="Ví dụ: 6.1"
+              addonAfter="inch"
               size="middle"
             />
           </Form.Item>
