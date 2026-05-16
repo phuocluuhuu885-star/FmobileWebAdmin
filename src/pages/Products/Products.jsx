@@ -294,7 +294,11 @@ const DialogUpateProduct = ({ productId, open, close }) => {
             manufacturer: d.manufacturer,
             category_id: d.category_id?._id || d.category_id,
             status: d.status,
-
+            screen: d.screen,
+            camera: d.camera,
+            chipset: d.chipset,
+            battery: d.battery,
+            connection: d.connection,
             operatingSystem: d.operatingSystem,
           });
         });
@@ -323,6 +327,11 @@ const DialogUpateProduct = ({ productId, open, close }) => {
           <Select options={dataCategory?.data?.map((c) => ({ label: c.name, value: c._id }))} />
         </Form.Item>
         <Form.Item name="status" label="Trạng thái"><Input /></Form.Item>
+        <Form.Item name="screen" label="Công nghệ màn hình"><Input /></Form.Item>
+        <Form.Item name="camera" label="Camera"><Input /></Form.Item>
+        <Form.Item name="chipset" label="Chip (Vi xử lý)"><Input /></Form.Item>
+        <Form.Item name="battery" label="Dung lượng Pin"><Input /></Form.Item>
+        <Form.Item name="connection" label="SIM &amp; Kết nối"><Input /></Form.Item>
 
       </Form>
     </Modal>

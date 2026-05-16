@@ -131,6 +131,31 @@ const CreateNewProduct = () => {
         </Select>
       ),
     },
+    {
+      label: "Công nghệ màn hình",
+      name: "screen",
+      component: <Input size="middle" placeholder="Ví dụ: OLED, 6.7 inch" />,
+    },
+    {
+      label: "Camera",
+      name: "camera",
+      component: <Input size="middle" placeholder="Ví dụ: Chính 48MP, Phụ 12MP" />,
+    },
+    {
+      label: "Chip (Vi xử lý)",
+      name: "chipset",
+      component: <Input size="middle" placeholder="Ví dụ: Snapdragon 8 Gen 2" />,
+    },
+    {
+      label: "Dung lượng Pin",
+      name: "battery",
+      component: <Input size="middle" placeholder="Ví dụ: 5000 mAh" />,
+    },
+    {
+      label: "SIM & Kết nối",
+      name: "connection",
+      component: <Input size="middle" placeholder="Ví dụ: 2 SIM Nano, 5G" />,
+    },
   ];
 
   return (
