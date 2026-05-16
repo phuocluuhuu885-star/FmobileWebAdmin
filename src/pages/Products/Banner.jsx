@@ -98,7 +98,7 @@ const Banner = () => {
           type="primary"
           className="bg-[#407cff] px-10"
         >
-          Add
+          Thêm
         </Button>
       </div>
       <Table

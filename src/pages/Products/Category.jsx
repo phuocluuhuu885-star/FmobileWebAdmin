@@ -83,7 +83,7 @@ const Category = () => {
             setOpenDialog(true);
           }}
         >
-          Add
+          Thêm
         </Button>
       </div>
       <Table

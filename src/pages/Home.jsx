@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import "./home.css";
 import Cookies from "js-cookie";
@@ -27,6 +27,65 @@ ChartJS.register(
 );
 
 const formatter = (value) => <CountUp end={value} separator="," />;
+
+const getProductLineName = (item) =>
+  item?.option_id?.product_id?.name ||
+  item?.option_id?.name ||
+  "Sản phẩm không xác định";
+
+const getProductLineImage = (item) =>
+  item?.option_id?.image ||
+  (Array.isArray(item?.option_id?.product_id?.image)
+    ? item.option_id.product_id.image[0]
+    : item?.option_id?.product_id?.image) ||
+  "";
+
+const getProductLineRevenue = (item) => {
+  const price = Number(item?.option_id?.price || 0);
+  const discountPct = Number(item?.discount_value || 0);
+  const discount = discountPct ? (price * discountPct) / 100 : 0;
+  const finalPrice = Math.max(price - discount, 0);
+  return finalPrice * Number(item?.quantity || 0);
+};
+
+const getOrderCustomerKey = (order) => {
+  const userId = order?.user_id;
+  if (userId) {
+    if (typeof userId === "object") return userId._id || userId.id;
+    return String(userId);
+  }
+  const phone = order?.info_id?.phone_number;
+  if (phone) return `phone:${phone}`;
+  const email = order?.info_id?.email;
+  if (email) return `email:${email}`;
+  const name = order?.info_id?.name;
+  if (name) return `name:${name}`;
+  return null;
+};
+
+const getOrderCustomerDisplayName = (order, userMap) => {
+  const userId = order?.user_id;
+  if (typeof userId === "object") {
+    return (
+      userId.username ||
+      userId.full_name ||
+      userId.email ||
+      order?.info_id?.name ||
+      "—"
+    );
+  }
+  if (userId && userMap?.has(userId)) {
+    const user = userMap.get(userId);
+    return user.username || user.full_name || user.email || "—";
+  }
+  return (
+    order?.info_id?.name ||
+    order?.info_id?.phone_number ||
+    order?.info_id?.email ||
+    "Khách không xác định"
+  );
+};
+
 const Home = () => {
   const token = Cookies.get("token");
 
@@ -50,7 +109,8 @@ const Home = () => {
   const [endDate, setEndDate] = useState(null);
   const [totalRevenue, setTotalRevenue] = useState(null);
   const [ordersSuccessfully, setOrdersSuccessfully] = useState(null);
-  
+  const [selectedMonthKey, setSelectedMonthKey] = useState(null);
+
  const toDateObj = (d) => {
     if (!d) return null;
     if (typeof d.toDate === "function") return d.toDate();
@@ -103,8 +163,132 @@ const Home = () => {
     });
     const values = monthKeys.map((k) => monthlyMap.get(k) || 0);
 
-    return { labels, values };
+    return { labels, values, monthKeys };
   }, [dataInvoice, startDate, endDate]);
+
+  useEffect(() => {
+    setSelectedMonthKey(null);
+  }, [startDate, endDate]);
+
+  const monthDetail = useMemo(() => {
+    if (!selectedMonthKey) return null;
+
+    const orders = Array.isArray(dataInvoice?.result) ? dataInvoice.result : [];
+    const [yearStr, monthStr] = selectedMonthKey.split("-");
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+
+    let totalRevenue = 0;
+    let orderCount = 0;
+    const productMap = new Map();
+
+    orders.forEach((order) => {
+      const createdAt = new Date(order?.createdAt);
+      if (Number.isNaN(createdAt.getTime())) return;
+      if (order?.status !== "Đã giao hàng") return;
+      if (
+        createdAt.getFullYear() !== year ||
+        createdAt.getMonth() + 1 !== month
+      ) {
+        return;
+      }
+
+      totalRevenue += Number(order?.total_price || 0);
+      orderCount += 1;
+
+      (order?.productsOrder || []).forEach((item) => {
+        const productId =
+          item?.option_id?.product_id?._id ||
+          item?.option_id?._id ||
+          getProductLineName(item);
+        const lineRevenue = getProductLineRevenue(item);
+        const quantity = Number(item?.quantity || 0);
+
+        if (productMap.has(productId)) {
+          const existing = productMap.get(productId);
+          existing.totalQuantitySold += quantity;
+          existing.totalRevenue += lineRevenue;
+        } else {
+          productMap.set(productId, {
+            id: productId,
+            productName: getProductLineName(item),
+            productImage: getProductLineImage(item),
+            totalQuantitySold: quantity,
+            totalRevenue: lineRevenue,
+          });
+        }
+      });
+    });
+
+    const [y, m] = selectedMonthKey.split("-");
+    return {
+      label: `${m}/${y}`,
+      totalRevenue,
+      orderCount,
+      products: Array.from(productMap.values()).sort(
+        (a, b) => b.totalRevenue - a.totalRevenue
+      ),
+    };
+  }, [selectedMonthKey, dataInvoice]);
+
+  const topCancelledCustomers = useMemo(() => {
+    const orders = Array.isArray(dataInvoice?.result) ? dataInvoice.result : [];
+    const start = toDateObj(startDate);
+    const end = toDateObj(endDate);
+    const userMap = new Map();
+    (dataUser?.result || []).forEach((user) => {
+      if (user?._id) userMap.set(user._id, user);
+    });
+
+    const cancelMap = new Map();
+
+    orders.forEach((order) => {
+      if (order?.status !== "Đã hủy") return;
+
+      const createdAt = new Date(order?.createdAt);
+      if (Number.isNaN(createdAt.getTime())) return;
+      if (start && createdAt < start) return;
+      if (end) {
+        const endOfDay = new Date(end);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (createdAt > endOfDay) return;
+      }
+
+      const key = getOrderCustomerKey(order);
+      if (!key) return;
+
+      const userId =
+        typeof order.user_id === "object"
+          ? order.user_id?._id
+          : order.user_id || null;
+
+      if (cancelMap.has(key)) {
+        cancelMap.get(key).totalCancelledOrders += 1;
+      } else {
+        cancelMap.set(key, {
+          id: key,
+          userId: userId || "—",
+          username: getOrderCustomerDisplayName(order, userMap),
+          phone: order?.info_id?.phone_number || "—",
+          totalCancelledOrders: 1,
+        });
+      }
+    });
+
+    return Array.from(cancelMap.values())
+      .sort((a, b) => b.totalCancelledOrders - a.totalCancelledOrders)
+      .slice(0, 10);
+  }, [dataInvoice, dataUser, startDate, endDate]);
+
+  const handleRevenueBarClick = useCallback(
+    (_event, elements) => {
+      if (!elements?.length) return;
+      const index = elements[0].index;
+      const key = revenueTrend.monthKeys?.[index];
+      if (key) setSelectedMonthKey(key);
+    },
+    [revenueTrend.monthKeys]
+  );
 
   const revenueTrendChartData = useMemo(
     () => ({
@@ -113,21 +297,32 @@ const Home = () => {
         {
           label: "Doanh thu (VNĐ)",
           data: revenueTrend.values,
-          backgroundColor: "#407cff",
-          borderColor: "#407cff",
+          backgroundColor: revenueTrend.monthKeys.map((key) =>
+            key === selectedMonthKey ? "#1d4ed8" : "#407cff"
+          ),
+          borderColor: revenueTrend.monthKeys.map((key) =>
+            key === selectedMonthKey ? "#1d4ed8" : "#407cff"
+          ),
           borderWidth: 1,
           borderRadius: 6,
           maxBarThickness: 45,
         },
       ],
     }),
-    [revenueTrend]
+    [revenueTrend, selectedMonthKey]
   );
 
   const revenueTrendChartOptions = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      onClick: handleRevenueBarClick,
+      onHover: (event, elements) => {
+        const target = event?.native?.target;
+        if (target) {
+          target.style.cursor = elements?.length ? "pointer" : "default";
+        }
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -145,8 +340,42 @@ const Home = () => {
         },
       },
     }),
-    []
+    [handleRevenueBarClick]
   );
+
+  const monthDetailColumns = [
+    {
+      title: "STT",
+      key: "index",
+      width: 50,
+      render: (_text, _record, index) => index + 1,
+    },
+    {
+      title: "Tên sản phẩm",
+      dataIndex: "productName",
+      key: "productName",
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "productImage",
+      key: "productImage",
+      render: (text) =>
+        text ? <img src={text} alt="" className="w-16" /> : "—",
+    },
+    {
+      title: "Số lượng bán",
+      dataIndex: "totalQuantitySold",
+      key: "totalQuantitySold",
+      render: (text) => Number(text || 0).toLocaleString("vi-VN"),
+    },
+    {
+      title: "Doanh thu",
+      dataIndex: "totalRevenue",
+      key: "totalRevenue",
+      render: (text) =>
+        `${Number(text || 0).toLocaleString("vi-VN")} đ`,
+    },
+  ];
   //------------Tổng doanh thu-----------
   useEffect(() => {
     const url = `${import.meta.env.VITE_BASE_URL}statistical/get-total-revenue`;
@@ -344,6 +573,39 @@ useEffect(() => {
       ),
     },
   ];
+  const columnsCancelledCustomers = [
+    {
+      title: "STT",
+      key: "index",
+      width: 50,
+      render: (_text, _record, index) => index + 1,
+    },
+    {
+      title: "Tên khách hàng",
+      dataIndex: "username",
+      key: "username",
+    },
+    {
+      title: "ID user",
+      dataIndex: "userId",
+      key: "userId",
+    },
+    {
+      title: "Số điện thoại",
+      dataIndex: "phone",
+      key: "phone",
+    },
+    {
+      title: "Số đơn đã hủy",
+      dataIndex: "totalCancelledOrders",
+      key: "totalCancelledOrders",
+      sorter: (a, b) => a.totalCancelledOrders - b.totalCancelledOrders,
+      defaultSortOrder: "descend",
+      render: (text) => (
+        <Typography>{Number(text || 0).toLocaleString("vi-VN")}</Typography>
+      ),
+    },
+  ];
   const handleDateRangeChange = (dates) => {
     if (dates && dates.length === 2) {
       const [start, end] = dates;
@@ -473,6 +735,9 @@ useEffect(() => {
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
                Biểu đồ doanh thu theo tháng
               </Typography.Title>
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                Nhấn vào cột tháng để xem chi tiết doanh thu và sản phẩm đã bán
+              </Typography.Text>
             </div>
            <div style={{ height: 320, padding: 16 }}>
               {revenueTrend.labels.length > 0 ? (
@@ -490,11 +755,75 @@ useEffect(() => {
                 />
               )}
             </div>
+            {monthDetail && (
+              <div className="px-4 pb-4 border-t pt-3">
+                <Typography.Title level={5} style={{ marginTop: 0 }}>
+                  Chi tiết tháng {monthDetail.label}
+                </Typography.Title>
+                <Flex gap={24} wrap="wrap" className="mb-3">
+                  <Statistic
+                    title="Doanh thu tháng"
+                    value={monthDetail.totalRevenue}
+                    formatter={formatterVND}
+                  />
+                  <Statistic
+                    title="Số đơn đã giao"
+                    value={monthDetail.orderCount}
+                    formatter={formatter}
+                  />
+                </Flex>
+                <Typography.Text strong className="block mb-2">
+                  Sản phẩm đã bán trong tháng
+                </Typography.Text>
+                {monthDetail.products.length > 0 ? (
+                  <Table
+                    pagination={false}
+                    size="small"
+                    dataSource={monthDetail.products}
+                    columns={monthDetailColumns}
+                    rowKey={(record) => record.id}
+                  />
+                ) : (
+                  <Empty description="Không có sản phẩm trong các đơn đã giao tháng này" />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      
+      <div className="p-3">
+        <div className="flex flex-col border rounded-md shadow-lg">
+          <div className="p-2 px-5">
+            <Typography.Title level={4} style={{ marginBottom: 0 }}>
+              Khách hàng hủy đơn nhiều nhất
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              {startDate && endDate
+                ? "Thống kê theo khoảng thời gian đã chọn, xếp từ nhiều đến ít"
+                : "Thống kê toàn bộ đơn đã hủy, xếp từ nhiều đến ít"}
+            </Typography.Text>
+          </div>
+          <Table
+            pagination={false}
+            dataSource={topCancelledCustomers}
+            columns={columnsCancelledCustomers}
+            rowKey={(record) => record.id}
+            loading={loadingInvoice}
+            locale={{
+              emptyText: (
+                <Empty
+                  description={
+                    startDate && endDate
+                      ? "Không có đơn hủy trong khoảng thời gian đã chọn"
+                      : "Chưa có đơn hàng bị hủy"
+                  }
+                />
+              ),
+            }}
+          />
+        </div>
+      </div>
         
     </div>
   );
