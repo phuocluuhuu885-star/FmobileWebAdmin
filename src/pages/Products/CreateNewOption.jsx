@@ -7,6 +7,8 @@ import {
   InputNumber,
   Select,
   notification,
+  Row,
+  Col
 } from "antd";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -81,136 +83,167 @@ const CreateNewOption = ({ productId }) => {
     <div>
       <Flex
         vertical
-        className="border w-[50%] p-4 mx-auto my-auto mt-3 shadow-xl rounded-xl"
+        className="border w-[60%] p-6 mx-auto my-auto mt-3 shadow-xl rounded-xl bg-white"
         style={{ flex: 1 }}
       >
         <Form
           form={form}
-          layout="horizontal"
+          layout="vertical"
           onFinish={handleFinish}
-          labelCol={{ span: 4 }}
-          labelAlign="left"
         >
-          <Form.Item label={"Màu"} name={"name_color"}>
-            <Select
-              mode="tags"
-              placeholder="Chọn màu có sẵn hoặc gõ màu mới rồi nhấn Enter"
-              size="middle"
-              className="w-[50%]"
-              onChange={(values) => {
-                const lastValue = values[values.length - 1];
-                form.setFieldsValue({ name_color: lastValue ? [lastValue] : [] });
-              }}
-            >
-              {existingColors.map(color => (
-                <Select.Option key={color} value={color}>{color}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label={"RAM"} name={"ram"}>
-            <Select placeholder="Chọn RAM" className="w-[50%]">
-              <Select.Option value="4GB">4GB</Select.Option>
-              <Select.Option value="8GB">8GB</Select.Option>
-              <Select.Option value="12GB">12GB</Select.Option>
-              <Select.Option value="16GB">16GB</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label={"Dung lượng (ROM)"} name={"storage_capacity"}>
-            <Select placeholder="Chọn ROM" className="w-[50%]">
-              <Select.Option value="64GB">64GB</Select.Option>
-              <Select.Option value="128GB">128GB</Select.Option>
-              <Select.Option value="256GB">256GB</Select.Option>
-              <Select.Option value="512GB">512GB</Select.Option>
-              <Select.Option value=">=1TB">&gt;=1TB</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label={"Độ mới"} name={"condition_percent"}>
-            <Select placeholder="Chọn độ mới" className="w-[50%]">
-              <Select.Option value="95%">95%</Select.Option>
-              <Select.Option value="98%">98%</Select.Option>
-              <Select.Option value="99%">99%</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label={"Tình trạng Pin"} name={"battery_health"}>
-            <Select placeholder="Chọn tình trạng Pin" className="w-[50%]">
-              <Select.Option value="<80%">&lt;80%</Select.Option>
-              <Select.Option value="80% - 90%">80% - 90%</Select.Option>
-              <Select.Option value=">90%">&gt;90%</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label={"Tình trạng máy"} name={"is_original"}>
-            <Select placeholder="Chọn tình trạng máy" className="w-[50%]">
-              <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
-              <Select.Option value="Đã thay màn">Đã thay màn</Select.Option>
-              <Select.Option value="Đã thay pin">Đã thay pin</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label={"Màn hình"} name={"screen"}>
-            <Input
-              placeholder="Ví dụ: 6.1"
-              addonAfter="inch"
-              size="middle"
-              className="w-[50%]"
-            />
-          </Form.Item>
-          <Form.Item name="image" label="Ảnh option">
-            <Input
-              className="w-[50%]"
-              placeholder="Ảnh option"
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label={"Màu"} name={"name_color"}>
+                <Select
+                  mode="tags"
+                  placeholder="Chọn hoặc gõ màu mới"
+                  size="middle"
+                  className="w-full"
+                  onChange={(values) => {
+                    const lastValue = values[values.length - 1];
+                    form.setFieldsValue({ name_color: lastValue ? [lastValue] : [] });
+                  }}
+                >
+                  {existingColors.map(color => (
+                    <Select.Option key={color} value={color}>{color}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item label={"RAM"} name={"ram"}>
+                <Select placeholder="Chọn RAM" className="w-full">
+                  <Select.Option value="4GB">4GB</Select.Option>
+                  <Select.Option value="8GB">8GB</Select.Option>
+                  <Select.Option value="12GB">12GB</Select.Option>
+                  <Select.Option value="16GB">16GB</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item label={"Dung lượng (ROM)"} name={"storage_capacity"}>
+                <Select placeholder="Chọn ROM" className="w-full">
+                  <Select.Option value="64GB">64GB</Select.Option>
+                  <Select.Option value="128GB">128GB</Select.Option>
+                  <Select.Option value="256GB">256GB</Select.Option>
+                  <Select.Option value="512GB">512GB</Select.Option>
+                  <Select.Option value=">=1TB">&gt;=1TB</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
 
-                if (file) {
-                  // Display image preview
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setImage(file);
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-            />
-          </Form.Item>
-          <Form.Item label={"giá tiền"} name={"price"}>
-            <InputNumber
-              min={0}
-              precision={0}
-              step={1000}
-              parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
-              placeholder="nhập giá tiền của option sản phẩm"
-              size="middle"
-              className="w-[50%]"
-            />
-          </Form.Item>
-          <Form.Item label={"Số lượng"} name={"quantity"}>
-            <InputNumber
-              min={0}
-              precision={0}
-              step={1}
-              parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
-              placeholder="nhập số lượng của option sản phẩm"
-              size="middle"
-              className="w-[50%]"
-            />
-          </Form.Item>
-          <Form.Item
-            label={"hot option"}
-            name={"hot_option"}
-            valuePropName="checked"
-          >
-            <Checkbox />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              htmlType="submit"
-              type="primary"
-              className="bg-[#407cff] w-[30%]"
-            >
-              Tạo sản phẩm
-            </Button>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item label={"Độ mới"} name={"condition_percent"}>
+                <Select placeholder="Chọn độ mới" className="w-full">
+                  <Select.Option value="95%">95%</Select.Option>
+                  <Select.Option value="98%">98%</Select.Option>
+                  <Select.Option value="99%">99%</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label={"Tình trạng Pin"} name={"battery_health"}>
+                <Select placeholder="Chọn tình trạng Pin" className="w-full">
+                  <Select.Option value="<80%">&lt;80%</Select.Option>
+                  <Select.Option value="80% - 90%">80% - 90%</Select.Option>
+                  <Select.Option value=">90%">&gt;90%</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label={"Tình trạng máy"} name={"is_original"}>
+                <Select placeholder="Chọn tình trạng máy" className="w-full">
+                  <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
+                  <Select.Option value="Đã thay màn">Đã thay màn</Select.Option>
+                  <Select.Option value="Đã thay pin">Đã thay pin</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label={"Màn hình"} name={"screen"}>
+                <Input
+                  placeholder="Ví dụ: 6.1"
+                  addonAfter="inch"
+                  size="middle"
+                  className="w-full"
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label={"Giá tiền"} name={"price"}>
+                <InputNumber
+                  min={0}
+                  precision={0}
+                  step={1000}
+                  parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
+                  placeholder="Nhập giá tiền"
+                  size="middle"
+                  className="w-full"
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label={"Số lượng"} name={"quantity"}>
+                <InputNumber
+                  min={0}
+                  precision={0}
+                  step={1}
+                  parser={(v) => String(v ?? "").replace(/[^\d]/g, "")}
+                  placeholder="Nhập số lượng"
+                  size="middle"
+                  className="w-full"
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item name="image" label="Ảnh option">
+                <Input
+                  className="w-full"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setImage(file);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col span={24}>
+              <Form.Item
+                name={"hot_option"}
+                valuePropName="checked"
+              >
+                <Checkbox>Hot option (Nổi bật)</Checkbox>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row justify="end" className="mt-4">
+            <Col span={24}>
+              <Button
+                htmlType="submit"
+                type="primary"
+                className="bg-[#407cff] w-full h-10 text-base"
+              >
+                Lưu Option
+              </Button>
+            </Col>
+          </Row>
         </Form>
       </Flex>
     </div>
