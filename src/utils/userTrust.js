@@ -6,7 +6,7 @@ export function pickUserFromApiResponse(resData) {
   return resData.data ?? resData.result ?? resData;
 }
 
-export function normalizeTrustScore(value, fallback = 100) {
+export function normalizeTrustScore(value, fallback = 150) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const n = Number(value);
   if (Number.isFinite(n)) return n;
