@@ -230,10 +230,26 @@ const OrderDetail = () => {
       ],
     }));
   };
+  const getVoucherDiscountMoney = (product) => {
+    const price = Number(product.custom_price || 0);
+    const qty = Number(product.quantity || 0);
+    const totalOriginal = price * qty;
+    const mergedPercent = Number(product.discount_value || 0);
+    const originalPercent = Number(product.option_id?.discount_value || 0);
+    const voucherPercent = Math.max(0, mergedPercent - originalPercent);
+    return Math.round((totalOriginal * voucherPercent) / 100);
+  };
 
-
-
-
+  const handleVoucherDiscountChange = (product, newDiscountMoney) => {
+    const price = Number(product.custom_price || 0);
+    const qty = Number(product.quantity || 0);
+    const totalOriginal = price * qty;
+    if (totalOriginal === 0) return;
+    const originalPercent = Number(product.option_id?.discount_value || 0);
+    const voucherPercent = (newDiscountMoney * 100) / totalOriginal;
+    const mergedPercent = Math.min(100, Math.max(0, Math.round(originalPercent + voucherPercent)));
+    updateProductRow(product._tempId, 'discount_value', mergedPercent);
+  };
 
   const renderPrice = (price, discountValue) => {
     const discount = discountValue ? (price * discountValue) / 100 : 0;
@@ -375,7 +391,7 @@ const OrderDetail = () => {
                 <tr>
                   <th className="p-2 border">Sản phẩm</th>
                   <th className="p-2 border text-center">SL</th>
-                  <th className="p-2 border text-center">Giảm %</th>
+                  <th className="p-2 border text-center">Giảm giá áp mã</th>
                   <th className="p-2 border text-right">Giá</th>
                   <th className="p-2 border text-right">Tổng</th>
                   <th className="p-2 border text-right">Thành tiền</th>
@@ -409,9 +425,12 @@ const OrderDetail = () => {
                         <InputNumber
                           disabled={!editMode.products || isOrderLocked}
                           min={0}
-                          max={100}
-                          value={product.discount_value}
-                          onChange={(value) => updateProductRow(product._tempId, 'discount_value', Number(value || 0))}
+                          value={getVoucherDiscountMoney(product)}
+                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                          parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                          onChange={(value) => handleVoucherDiscountChange(product, Number(value || 0))}
+                          addonAfter="đ"
+                          className="w-36"
                         />
                       </td>
                       <td className="p-2 border text-right">
