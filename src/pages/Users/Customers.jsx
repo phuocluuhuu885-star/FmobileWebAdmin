@@ -128,6 +128,10 @@ const Customers = () => {
       } finally {
         setDrawerLoading(false);
       }
+    },
+    [token]
+  );
+
   const handleToggleActive = (user) => {
     Modal.confirm({
       title: `Bạn muốn ${user.is_active ? "khóa" : "mở khóa"} tài khoản này?`,

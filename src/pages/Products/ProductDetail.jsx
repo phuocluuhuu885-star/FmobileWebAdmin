@@ -14,6 +14,7 @@ import {
   Button,
   Checkbox,
   notification,
+  Tag,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import {
@@ -140,65 +141,87 @@ const ProductDetail = () => {
         </div>
       </Header>
       <Content className="mt-[4%] bg-white">
-        <div className="flex items-center mx-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-10">
           {data?.result?.option?.map((option, index) => {
             return (
               <div
                 key={index}
-                className="flex flex-row p-3 m-2 border rounded-xl shadow-lg items-center relative"
+                className="flex flex-row p-4 border border-gray-200 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 items-start justify-between relative cursor-pointer min-h-[220px]"
+                onClick={() => {
+                  setApiMethod("update");
+                  dispatch(setSelectedOption(option));
+                  setApi(
+                    `${import.meta.env.VITE_BASE_URL}products/update-option/${
+                      option._id
+                    }`
+                  );
+                  setOpenDialogOption(true);
+                }}
               >
-                <div
-                  className="flex"
-                  onClick={() => {
-                    setApiMethod("update");
-                    dispatch(setSelectedOption(option));
-                    setApi(
-                      `${import.meta.env.VITE_BASE_URL}products/update-option/${
-                        option._id
-                      }`
-                    );
-                    setOpenDialogOption(true);
-                  }}
-                >
+                <div className="relative flex-shrink-0 mr-3">
                   <img
                     src={option.image}
-                    className="w-28 h-28 object-contain mr-1"
+                    className="w-24 h-24 md:w-28 md:h-28 object-contain bg-gray-50 rounded-xl p-1 border border-gray-100"
+                    alt={option.name_color}
                   />
-                  <div className="flex flex-col">
-                    <Text className="text-base">
-                      Màu sắc: {option.name_color}
-                    </Text>
-                    {option.ram && <Text className="text-base">RAM: {option.ram}</Text>}
-                    {option.storage_capacity && <Text className="text-base">Bộ nhớ: {option.storage_capacity}</Text>}
-                    {option.condition_percent && <Text className="text-base">Độ mới: {option.condition_percent}</Text>}
-                    {option.battery_health && <Text className="text-base">Pin: {option.battery_health}</Text>}
-                    {option.is_original && <Text className="text-base">Tình trạng: {option.is_original}</Text>}
-                    {option.warranty_time && <Text className="text-base">Bảo hành: {option.warranty_time}</Text>}
-                    <Text className="text-base">
-                      Giá tiền gốc: {option.price.toLocaleString("vi-VN")} đ
-                    </Text>
-                    <Text className="text-base">
-                      Số lượng trong kho: {option.quantity}
-                    </Text>
-                    <Text className="text-base">
-                      Số lượng đã bán: {option.soldQuantity}
-                    </Text>
-                  </div>
-                  {option.hot_option ? (
-                    <img
-                      src="/hot.png"
-                      className="absolute w-10 -top-3 -left-3"
-                    />
-                  ) : (
-                    ""
+                  {option.hot_option && (
+                    <Tag
+                      color="red"
+                      className="absolute -top-2 -left-2 m-0 font-semibold shadow-sm border-none"
+                    >
+                      🔥 Nổi bật
+                    </Tag>
                   )}
                 </div>
-                <div
-                  className="ml-5"
-                  onClick={() => {
+                <div className="flex flex-col flex-grow min-w-0 pr-2 space-y-1">
+                  <div className="text-gray-900 font-semibold text-sm">
+                    Màu sắc: <span className="font-normal text-gray-700">{option.name_color}</span>
+                  </div>
+                  {option.ram && (
+                    <div className="text-xs text-gray-600">
+                      RAM: <span className="text-gray-800 font-medium">{option.ram}</span>
+                    </div>
+                  )}
+                  {option.storage_capacity && (
+                    <div className="text-xs text-gray-600">
+                      Bộ nhớ: <span className="text-gray-800 font-medium">{option.storage_capacity}</span>
+                    </div>
+                  )}
+                  {option.condition_percent && (
+                    <div className="text-xs text-gray-600">
+                      Độ mới: <span className="text-gray-800 font-medium">{option.condition_percent}</span>
+                    </div>
+                  )}
+                  {option.battery_health && (
+                    <div className="text-xs text-gray-600">
+                      Pin: <span className="text-gray-800 font-medium">{option.battery_health}</span>
+                    </div>
+                  )}
+                  {option.is_original && (
+                    <div className="text-xs text-gray-600">
+                      Tình trạng: <span className="text-gray-800 font-medium">{option.is_original}</span>
+                    </div>
+                  )}
+                  {option.warranty_time && (
+                    <div className="text-xs text-gray-600">
+                      Bảo hành: <span className="text-gray-800 font-medium">{option.warranty_time}</span>
+                    </div>
+                  )}
+                  <div className="text-xs text-blue-600 font-semibold pt-1">
+                    Giá gốc: {option.price.toLocaleString("vi-VN")} đ
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Kho: <span className="text-gray-700 font-medium">{option.quantity}</span> | Đã bán: <span className="text-gray-700 font-medium">{option.soldQuantity}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors flex-shrink-0 self-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     Modal.confirm({
                       title: "Xóa option",
-                      content: `Bạn muốn xóa option này}?`,
+                      content: `Bạn muốn xóa option này?`,
                       okButtonProps: {
                         style: {
                           backgroundColor: "#407cff",
@@ -235,8 +258,8 @@ const ProductDetail = () => {
                     });
                   }}
                 >
-                  <TrashIcon className="w-8 h-8" color="red" />
-                </div>
+                  <TrashIcon className="w-5 h-5" />
+                </button>
               </div>
             );
           })}
@@ -248,9 +271,10 @@ const ProductDetail = () => {
               setApiMethod("add");
               setOpenDialogOption(true);
             }}
-            className="flex justify-center items-center w-28 h-28 ml-3 border-dashed border-2 border-gray-300 rounded-lg"
+            className="flex flex-col justify-center items-center p-4 border-dashed border-2 border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50 rounded-2xl transition-all duration-200 min-h-[220px]"
           >
-            <PlusIcon className="w-16 h-16" />
+            <PlusIcon className="w-12 h-12 text-gray-400 mb-2" />
+            <span className="text-gray-500 font-medium text-sm">Thêm option mới</span>
           </button>
         </div>
         <hr className="my-5" />
