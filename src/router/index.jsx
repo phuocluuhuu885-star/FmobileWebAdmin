@@ -10,6 +10,7 @@ import StoreChart from "./../pages/Charts/Store";
 import Store from "./../pages/Users/Store";
 import Banner from "./../pages/Products/Banner";
 import ProductDetail from "../pages/Products/ProductDetail";
+import CustomerDetail from "../pages/Users/CustomerDetail";
 import Category from "../pages/Products/Category";
 import Invoice from "../pages/invoice/Invoice";
 import Voucher from "../pages/Voucher/Voucher";
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
     ],
   },
   { path: "/products/:id", element: <ProductDetail /> },
+  { path: "/customers/:id", element: <CustomerDetail /> },
   { path: "/products/create", element: <CreateNewProduct /> },
   { path: "/products/edit-product/:id", element: <EditProduct /> },
 ]);
