@@ -8,6 +8,12 @@ import Cookies from 'js-cookie';
 import { fetchInvoiceRequest } from '../../redux/actions/Invoice';
 import { normalizeIsBlacklisted, normalizeTrustScore } from '../../utils/userTrust';
 import { TrustScoreAndBlacklist, TRUST_RULES_SHORT_VI } from '../../components/TrustCustomerBadges';
+import {
+  CONFIRMABLE_ORDER_STATUSES,
+  IN_SHIPPING_STATUSES,
+  formatGhtkStatus,
+  formatOrderStatus,
+} from '../../utils/ghtkStatus';
 
 function buildOrderFormFromInvoice(d) {
   if (!d) {
@@ -55,8 +61,18 @@ const OrderDetail = () => {
 
   const [orderForm, setOrderForm] = useState(() => buildOrderFormFromInvoice(location.state?.invoice));
   const [auditLogs, setAuditLogs] = useState(() => location.state?.invoice?.admin_update_logs || []);
-  const [confirmModal, setConfirmModal] = useState({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
+  const [confirmModal, setConfirmModal] = useState({
+    visible: false,
+    status: '',
+    type: '',
+    message: '',
+    shouldNavigate: true,
+    mode: 'status',
+  });
   const [note, setNote] = useState('');
+  const [ghtkInfo, setGhtkInfo] = useState(() => location.state?.invoice?.ghtk || {});
+  const [confirmingGhtk, setConfirmingGhtk] = useState(false);
+  const [refreshingTracking, setRefreshingTracking] = useState(false);
   /** user_id populate từ GET order/detail-order */
   const [orderBuyer, setOrderBuyer] = useState(null);
   const [editMode, setEditMode] = useState({
@@ -68,9 +84,14 @@ const OrderDetail = () => {
 
   const isPending = orderForm.status === 'Chờ giao hàng';
   const isWaitConfirm = orderForm.status === 'Chờ xác nhận';
-  const isWaitDelivery = orderForm.status === 'Đang giao hàng';
-  const canCancelOrder = isWaitConfirm || isPending || isWaitDelivery;
-  const isOrderLocked = orderForm.status === 'Đang giao hàng';
+  const isInShipping =
+    IN_SHIPPING_STATUSES.includes(orderForm.status) || Boolean(ghtkInfo?.trackingCode);
+  const canCancelOrder =
+    isWaitConfirm || isPending || isInShipping;
+  const canConfirmGhtk =
+    CONFIRMABLE_ORDER_STATUSES.includes(orderForm.status) && !ghtkInfo?.trackingCode;
+  const isOrderLocked =
+    isInShipping || orderForm.status === 'Đã giao hàng' || orderForm.status === 'Đã hủy';
   const isCancelled = orderForm.status === 'Đã hủy';
   const isCompleted = orderForm.status === 'Đã giao hàng';
 
@@ -102,9 +123,100 @@ const OrderDetail = () => {
         const uid = result?.user_id;
         if (uid && typeof uid === 'object') setOrderBuyer(uid);
         else setOrderBuyer(null);
+        if (result?.status) {
+          setOrderForm((prev) => ({ ...prev, status: result.status }));
+        }
+        if (result?.ghtk) {
+          setGhtkInfo(result.ghtk);
+        }
+        if (result?.admin_update_logs) {
+          setAuditLogs(result.admin_update_logs);
+        }
       })
       .catch(() => setOrderBuyer(null));
   }, [data?._id, token]);
+
+  const applyOrderFromServer = (order) => {
+    if (!order) return;
+    if (order.status) {
+      setOrderForm((prev) => ({ ...prev, status: order.status }));
+    }
+    if (order.ghtk) {
+      setGhtkInfo(order.ghtk);
+    }
+    if (order.admin_update_logs) {
+      setAuditLogs(order.admin_update_logs);
+    }
+  };
+
+  const confirmGhtkOrder = () => {
+    if (!data?._id || !token) return;
+    setConfirmingGhtk(true);
+    axios
+      .put(
+        `${import.meta.env.VITE_BASE_URL}admin/order/confirm/${data._id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((res) => {
+        const order = res.data?.result;
+        applyOrderFromServer(order);
+        dispatch(fetchInvoiceRequest(token));
+        notification.success({
+          message: 'Thành công',
+          description:
+            res.data?.message ||
+            'Đã tạo vận đơn GHTK và chuyển đơn sang trạng thái giao hàng',
+          duration: 4,
+        });
+        setConfirmModal({
+          visible: false,
+          status: '',
+          type: '',
+          message: '',
+          shouldNavigate: true,
+          mode: 'status',
+        });
+      })
+      .catch((err) => {
+        notification.error({
+          message: 'Tạo vận đơn GHTK thất bại',
+          description: err.response?.data?.message || err.message,
+          duration: 5,
+        });
+      })
+      .finally(() => setConfirmingGhtk(false));
+  };
+
+  const refreshGhtkTracking = () => {
+    if (!data?._id || !token) return;
+    setRefreshingTracking(true);
+    axios
+      .get(`${import.meta.env.VITE_BASE_URL}admin/order/${data._id}/tracking`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const order = res.data?.result?.order;
+        applyOrderFromServer(order);
+        dispatch(fetchInvoiceRequest(token));
+        const delivered = res.data?.result?.delivered;
+        notification.success({
+          message: 'Đã đồng bộ GHTK',
+          description: delivered
+            ? 'Đơn đã được giao — trạng thái đã cập nhật'
+            : 'Trạng thái vận chuyển đã được cập nhật',
+          duration: 3,
+        });
+      })
+      .catch((err) => {
+        notification.error({
+          message: 'Không lấy được tracking GHTK',
+          description: err.response?.data?.message || err.message,
+          duration: 4,
+        });
+      })
+      .finally(() => setRefreshingTracking(false));
+  };
 
   const buyerFromList =
     data?.user_id && typeof data.user_id === 'object' ? data.user_id : null;
@@ -113,7 +225,26 @@ const OrderDetail = () => {
   const buyerBl = normalizeIsBlacklisted(buyer?.is_blacklisted);
 
   const triggerStatusChange = (status, notificationType, successMessage, shouldNavigate = true) => {
-    setConfirmModal({ visible: true, status, type: notificationType, message: successMessage, shouldNavigate });
+    setConfirmModal({
+      visible: true,
+      status,
+      type: notificationType,
+      message: successMessage,
+      shouldNavigate,
+      mode: 'status',
+    });
+    setNote('');
+  };
+
+  const openGhtkConfirmModal = () => {
+    setConfirmModal({
+      visible: true,
+      status: '',
+      type: 'ghtk',
+      message: 'Xác nhận đơn và tạo vận đơn GHTK',
+      shouldNavigate: false,
+      mode: 'ghtk',
+    });
     setNote('');
   };
 
@@ -154,19 +285,32 @@ const OrderDetail = () => {
               description: confirmModal.message,
               duration: 3,
             });
-            setConfirmModal({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
+            setConfirmModal({
+              visible: false,
+              status: '',
+              type: '',
+              message: '',
+              shouldNavigate: true,
+              mode: 'status',
+            });
             if (confirmModal.shouldNavigate) {
               navigate('/invoice');
             }
           })
           .catch(() => {
-            // Error updating notification
             notification.success({
               message: 'Thành công',
               description: confirmModal.message,
               duration: 3,
             });
-            setConfirmModal({ visible: false, status: '', type: '', message: '', shouldNavigate: true });
+            setConfirmModal({
+              visible: false,
+              status: '',
+              type: '',
+              message: '',
+              shouldNavigate: true,
+              mode: 'status',
+            });
           });
       })
       .catch(() => {
@@ -335,7 +479,12 @@ const OrderDetail = () => {
             </div>
 
             <Space direction="vertical" className="w-full">
-              <Input disabled={!editMode.general || isOrderLocked} value={orderForm.status} onChange={(e) => setOrderForm((prev) => ({ ...prev, status: e.target.value }))} placeholder="Trạng thái đơn hàng" />
+              <div>
+                <Typography.Text type="secondary">Trạng thái đơn (hệ thống)</Typography.Text>
+                <Typography.Text strong className="block text-base">
+                  {formatOrderStatus(orderForm.status)}
+                </Typography.Text>
+              </div>
               <Input disabled={!editMode.general || isOrderLocked} value={orderForm.info_id.name} onChange={(e) => updateInfoField('name', e.target.value)} placeholder="Tên khách hàng" />
               <Input disabled={!editMode.general || isOrderLocked} value={orderForm.info_id.phone_number} onChange={(e) => updateInfoField('phone_number', e.target.value)} placeholder="Số điện thoại" />
             </Space>
@@ -370,6 +519,28 @@ const OrderDetail = () => {
               <Input disabled={!editMode.shipping || isOrderLocked} value={orderForm.info_id.name} onChange={(e) => updateInfoField('name', e.target.value)} placeholder="Người nhận" />
               <Input disabled={!editMode.shipping || isOrderLocked} value={orderForm.delivery_method} onChange={(e) => setOrderForm((prev) => ({ ...prev, delivery_method: e.target.value }))} placeholder="Phương thức giao nhận" />
               <Input disabled={!editMode.shipping || isOrderLocked} value={orderForm.ip} onChange={(e) => setOrderForm((prev) => ({ ...prev, ip: e.target.value }))} placeholder="IP khách hàng" />
+              <div className="pt-2 border-t mt-2">
+                <Typography.Text type="secondary">Vận chuyển GHTK</Typography.Text>
+                <div className="mt-1">
+                  <Typography.Text className="block">
+                    Mã vận đơn:{' '}
+                    <Typography.Text copyable={!!ghtkInfo?.trackingCode}>
+                      {ghtkInfo?.trackingCode || ghtkInfo?.label || '—'}
+                    </Typography.Text>
+                  </Typography.Text>
+                  <Typography.Text className="block mt-1">
+                    Trạng thái GHTK:{' '}
+                    <Typography.Text strong>
+                      {formatGhtkStatus(ghtkInfo?.status)}
+                    </Typography.Text>
+                  </Typography.Text>
+                  {ghtkInfo?.fee > 0 && (
+                    <Typography.Text className="block mt-1">
+                      Phí ship GHTK: {Number(ghtkInfo.fee).toLocaleString('vi-VN')} đ
+                    </Typography.Text>
+                  )}
+                </div>
+              </div>
             </Space>
           </div>
         </Col>
@@ -460,24 +631,20 @@ const OrderDetail = () => {
           <div className="space-y-2">
             <Button
               block
-              disabled={!isWaitConfirm}
-              onClick={() => triggerStatusChange('Chờ giao hàng', 'wfd', 'Xác nhận đơn hàng thành công', false)}
+              type="primary"
+              disabled={!canConfirmGhtk}
+              loading={confirmingGhtk}
+              onClick={openGhtkConfirmModal}
             >
-              Xác nhận đơn hàng
+              Xác nhận đơn hàng (tạo GHTK)
             </Button>
             <Button
               block
-              disabled={!isPending}
-              onClick={() => triggerStatusChange('Đang giao hàng', 'delivere', 'Đang giao hàng')}
+              disabled={!ghtkInfo?.trackingCode || isCompleted || isCancelled}
+              loading={refreshingTracking}
+              onClick={refreshGhtkTracking}
             >
-              Giao hàng
-            </Button>
-            <Button
-              block
-              disabled={!isWaitDelivery}
-              onClick={() => triggerStatusChange('Đã giao hàng', 'delivered', 'Giao hàng thành công')}
-            >
-              Giao hàng thành công
+              Làm mới trạng thái GHTK
             </Button>
             <Button
               block
@@ -517,16 +684,51 @@ const OrderDetail = () => {
         </div>
       </div>
       <Modal
-        title={`Xác nhận đổi trạng thái: ${confirmModal.status}`}
+        title={
+          confirmModal.mode === 'ghtk'
+            ? 'Xác nhận đơn & tạo vận đơn GHTK'
+            : `Xác nhận đổi trạng thái: ${confirmModal.status}`
+        }
         open={confirmModal.visible}
-        onOk={confirmStatusChange}
-        onCancel={() => setConfirmModal({ visible: false, status: '', type: '', message: '', shouldNavigate: true })}
+        onOk={confirmModal.mode === 'ghtk' ? confirmGhtkOrder : confirmStatusChange}
+        onCancel={() =>
+          setConfirmModal({
+            visible: false,
+            status: '',
+            type: '',
+            message: '',
+            shouldNavigate: true,
+            mode: 'status',
+          })
+        }
         okText="Xác nhận"
         cancelText="Hủy"
+        confirmLoading={confirmingGhtk}
       >
-        <p>Bạn có chắc chắn muốn chuyển trạng thái thành <b>{confirmModal.status}</b>?</p>
-        {confirmModal.status === 'Đã hủy' &&
-          (orderForm.status === 'Chờ giao hàng' || orderForm.status === 'Đang giao hàng') && (
+        {confirmModal.mode === 'ghtk' ? (
+          <>
+            <p>
+              Hệ thống sẽ gọi <b>GHTK</b> để tạo vận đơn, lưu mã tracking vào đơn và chuyển trạng thái sang{' '}
+              <b>đang giao hàng</b>. Bạn không cần cập nhật trạng thái giao hàng thủ công.
+            </p>
+            <Alert
+              className="mt-3"
+              type="info"
+              showIcon
+              message="Yêu cầu cấu hình"
+              description="Backend cần GHTK_TOKEN và địa chỉ lấy hàng (GHTK_PICK_*) trong file .env."
+            />
+          </>
+        ) : (
+          <p>
+            Bạn có chắc chắn muốn chuyển trạng thái thành <b>{confirmModal.status}</b>?
+          </p>
+        )}
+        {confirmModal.mode !== 'ghtk' &&
+          confirmModal.status === 'Đã hủy' &&
+          (orderForm.status === 'Chờ giao hàng' ||
+            orderForm.status === 'Đang giao hàng' ||
+            orderForm.status === 'shipping') && (
             <Alert
               type="warning"
               showIcon
@@ -535,17 +737,21 @@ const OrderDetail = () => {
               description="Hủy từ trạng thái «Chờ giao hàng» hoặc «Đang giao hàng» sẽ bị server ghi nhận bom hàng và trừ điểm tin cậy khách (theo cấu hình)."
             />
           )}
-        <div className="mt-4">
-          <label className="block mb-2 font-medium">
-            {confirmModal.status === 'Đã hủy' ? 'Lý do hủy (bắt buộc):' : 'Ghi chú (tùy chọn):'}
-          </label>
-          <Input.TextArea
-            rows={3}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder={confirmModal.status === 'Đã hủy' ? 'Nhập lý do hủy đơn hàng' : 'Nhập ghi chú...'}
-          />
-        </div>
+        {confirmModal.mode !== 'ghtk' && (
+          <div className="mt-4">
+            <label className="block mb-2 font-medium">
+              {confirmModal.status === 'Đã hủy' ? 'Lý do hủy (bắt buộc):' : 'Ghi chú (tùy chọn):'}
+            </label>
+            <Input.TextArea
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={
+                confirmModal.status === 'Đã hủy' ? 'Nhập lý do hủy đơn hàng' : 'Nhập ghi chú...'
+              }
+            />
+          </div>
+        )}
       </Modal>
     </div>
   );
