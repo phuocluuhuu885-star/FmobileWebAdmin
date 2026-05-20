@@ -86,6 +86,7 @@ const Invoice = () => {
         { text: "Đã giao hàng", value: "Đã giao hàng" },
         { text: "Chờ giao hàng", value: "Chờ giao hàng" },
         { text: "Chờ xác nhận", value: "Chờ xác nhận" },
+        { text: "Đã thanh toán", value: "Đã thanh toán" },
         { text: "Đang giao hàng", value: "Đang giao hàng" },
       ],
       onFilter: (value, record) => {
@@ -97,6 +98,8 @@ const Invoice = () => {
           return record.status === "Chờ giao hàng";
         } else if (value === "Chờ xác nhận") {
           return record.status === "Chờ xác nhận";
+        } else if (value === "Đã thanh toán") {
+          return record.status === "Đã thanh toán";
         } else if (value === "Đang giao hàng") {
           return record.status === "Đang giao hàng";
         }

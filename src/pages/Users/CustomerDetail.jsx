@@ -210,7 +210,7 @@ const CustomerDetail = () => {
   const filteredOrders = useMemo(() => {
     if (activeFilter === "all") return orders;
     if (activeFilter === "pendingConfirmation") {
-      return orders.filter((o) => o.status === "Chờ xác nhận");
+      return orders.filter((o) => ["Chờ xác nhận", "Đã thanh toán"].includes(o.status));
     }
     if (activeFilter === "pendingPayment") {
       return orders.filter((o) => o.status === "Chờ thanh toán");
@@ -233,7 +233,7 @@ const CustomerDetail = () => {
   const counts = useMemo(() => {
     return {
       all: orders.length,
-      pendingConfirmation: orders.filter((o) => o.status === "Chờ xác nhận").length,
+      pendingConfirmation: orders.filter((o) => ["Chờ xác nhận", "Đã thanh toán"].includes(o.status)).length,
       pendingPayment: orders.filter((o) => o.status === "Chờ thanh toán").length,
       shipping: orders.filter((o) =>
         ["Chờ giao hàng", "Đang giao hàng"].includes(o.status)
@@ -271,6 +271,7 @@ const CustomerDetail = () => {
         if (status === "Đã giao hàng") color = "green";
         if (status === "Đã hủy") color = "red";
         if (status === "Chờ xác nhận") color = "orange";
+        if (status === "Đã thanh toán") color = "cyan";
         if (status === "Chờ thanh toán") color = "gold";
         return <Tag color={color}>{status}</Tag>;
       },

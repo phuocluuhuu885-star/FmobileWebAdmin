@@ -2,6 +2,7 @@
 export const ORDER_STATUS_LABELS = {
   "Chờ thanh toán": "Chờ thanh toán",
   "Chờ xác nhận": "Chờ xác nhận",
+  "Đã thanh toán": "Đã thanh toán",
   "Chờ giao hàng": "Chờ giao hàng",
   shipping: "Đang giao hàng (GHTK)",
   "Đang giao hàng": "Đang giao hàng",
@@ -37,6 +38,6 @@ export function formatGhtkStatus(status) {
   return key;
 }
 
-export const CONFIRMABLE_ORDER_STATUSES = ["Chờ xác nhận", "Chờ giao hàng"];
+export const CONFIRMABLE_ORDER_STATUSES = ["Chờ xác nhận", "Chờ giao hàng", "Đã thanh toán"];
 
 export const IN_SHIPPING_STATUSES = ["shipping", "Đang giao hàng"];

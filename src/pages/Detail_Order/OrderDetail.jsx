@@ -84,10 +84,11 @@ const OrderDetail = () => {
 
   const isPending = orderForm.status === 'Chờ giao hàng';
   const isWaitConfirm = orderForm.status === 'Chờ xác nhận';
+  const isPaid = orderForm.status === 'Đã thanh toán';
   const isInShipping =
     IN_SHIPPING_STATUSES.includes(orderForm.status) || Boolean(ghtkInfo?.trackingCode);
   const canCancelOrder =
-    isWaitConfirm || isPending || isInShipping;
+    isWaitConfirm || isPaid || isPending || isInShipping;
   const canConfirmGhtk =
     CONFIRMABLE_ORDER_STATUSES.includes(orderForm.status) && !ghtkInfo?.trackingCode;
   const isOrderLocked =
