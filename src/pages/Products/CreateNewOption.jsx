@@ -10,6 +10,7 @@ import {
   Row,
   Col
 } from "antd";
+import EditableTagSelect from "../../components/EditableTagSelect";
 import axios from "axios";
 import Cookies from "js-cookie";
 import React, { useState } from "react";
@@ -118,44 +119,41 @@ const CreateNewOption = ({ productId }) => {
             
             <Col span={12}>
               <Form.Item label={"RAM"} name={"ram"}>
-                <Select placeholder="Chọn RAM" className="w-full">
-                  <Select.Option value="4GB">4GB</Select.Option>
-                  <Select.Option value="8GB">8GB</Select.Option>
-                  <Select.Option value="12GB">12GB</Select.Option>
-                  <Select.Option value="16GB">16GB</Select.Option>
-                </Select>
+                <EditableTagSelect
+                  storageKey="ram"
+                  defaultOptions={["4GB", "6GB", "8GB", "12GB", "16GB"]}
+                  placeholder="Chọn hoặc nhập RAM mới"
+                />
               </Form.Item>
             </Col>
             
             <Col span={12}>
               <Form.Item label={"Dung lượng (ROM)"} name={"storage_capacity"}>
-                <Select placeholder="Chọn ROM" className="w-full">
-                  <Select.Option value="64GB">64GB</Select.Option>
-                  <Select.Option value="128GB">128GB</Select.Option>
-                  <Select.Option value="256GB">256GB</Select.Option>
-                  <Select.Option value="512GB">512GB</Select.Option>
-                  <Select.Option value=">=1TB">&gt;=1TB</Select.Option>
-                </Select>
+                <EditableTagSelect
+                  storageKey="storage"
+                  defaultOptions={["32GB", "64GB", "128GB", "256GB", "512GB", ">=1TB"]}
+                  placeholder="Chọn hoặc nhập ROM mới"
+                />
               </Form.Item>
             </Col>
 
             <Col span={12}>
               <Form.Item label={"Độ mới"} name={"condition_percent"}>
-                <Select placeholder="Chọn độ mới" className="w-full">
-                  <Select.Option value="95%">95%</Select.Option>
-                  <Select.Option value="98%">98%</Select.Option>
-                  <Select.Option value="99%">99%</Select.Option>
-                </Select>
+                <EditableTagSelect
+                  storageKey="condition"
+                  defaultOptions={["90%", "95%", "97%", "98%", "99%"]}
+                  placeholder="Chọn hoặc nhập độ mới"
+                />
               </Form.Item>
             </Col>
 
             <Col span={12}>
               <Form.Item label={"Tình trạng Pin"} name={"battery_health"}>
-                <Select placeholder="Chọn tình trạng Pin" className="w-full">
-                  <Select.Option value="<80%">&lt;80%</Select.Option>
-                  <Select.Option value="80% - 90%">80% - 90%</Select.Option>
-                  <Select.Option value=">90%">&gt;90%</Select.Option>
-                </Select>
+                <EditableTagSelect
+                  storageKey="battery"
+                  defaultOptions={["<70%", "<80%", "80% - 90%", ">90%"]}
+                  placeholder="Chọn hoặc nhập tình trạng pin"
+                />
               </Form.Item>
             </Col>
 
