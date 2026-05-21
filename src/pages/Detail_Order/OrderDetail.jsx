@@ -669,6 +669,16 @@ const OrderDetail = () => {
         <div className="bg-white p-4 rounded shadow-sm">
           <Typography.Title level={5}>Order Thao tác</Typography.Title>
           <div className="space-y-2">
+            {orderForm.status === 'Chờ thanh toán' && (
+              <Button
+                block
+                type="primary"
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                onClick={() => triggerStatusChange('Đã thanh toán', 'paid', 'Xác nhận thanh toán đơn hàng', false)}
+              >
+                Xác nhận đã thanh toán
+              </Button>
+            )}
             <Button
               block
               type="primary"
