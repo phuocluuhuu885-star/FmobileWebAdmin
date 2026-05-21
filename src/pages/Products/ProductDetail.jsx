@@ -424,6 +424,7 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
   const [form] = Form.useForm();
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedIntegrity, setSelectedIntegrity] = useState("");
   const token = Cookies.get("token");
   const dispatch = useDispatch();
 
@@ -440,6 +441,24 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     if (!open) return;
 
     if (method === "update" && data) {
+      let isOriginalVal = data.is_original ?? "";
+      // Ưu tiên lấy screen từ trường screen của Option;
+      // Fallback: nếu is_original dạng cũ "Đã thay màn (xxx)", trích xuất "xxx"
+      let screenReplacedVal = data.screen ?? "";
+
+      if (isOriginalVal.startsWith("Đã thay màn")) {
+        // Dữ liệu cũ: ghép chi tiết vào is_original → tách ra
+        if (!screenReplacedVal) {
+          const match = isOriginalVal.match(/\(([^)]+)\)/);
+          if (match && match[1]) {
+            screenReplacedVal = match[1]; // VD: "Chính hãng", "Không chính hãng"
+          }
+        }
+        isOriginalVal = "Đã thay màn";
+      }
+
+      setSelectedIntegrity(isOriginalVal);
+
       form.setFieldsValue({
         name_color: data.name_color ?? "",
         price: data.price ?? 0,
@@ -449,12 +468,13 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
         storage_capacity: data.storage_capacity ?? "",
         condition_percent: data.condition_percent ?? "",
         battery_health: data.battery_health ?? "",
-        is_original: data.is_original ?? "",
-        screen: data.screen ?? "",
+        is_original: isOriginalVal,
+        screen_replaced_type: screenReplacedVal,
       });
     } else {
       // Khi thêm option mới, luôn clear dữ liệu option cũ.
       form.resetFields();
+      setSelectedIntegrity("");
       form.setFieldsValue({
         name_color: "",
         price: 0,
@@ -465,7 +485,7 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
         condition_percent: "",
         battery_health: "",
         is_original: "",
-        screen: "",
+        screen_replaced_type: "",
       });
       setImage(null);
     }
@@ -485,8 +505,11 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
     fromData.append("storage_capacity", value.storage_capacity ?? "");
     fromData.append("condition_percent", value.condition_percent ?? "");
     fromData.append("battery_health", value.battery_health ?? "");
+
     fromData.append("is_original", value.is_original ?? "");
-    fromData.append("screen", value.screen ? `${value.screen} inch` : "");
+    // Nếu chọn "Đã thay màn", lưu loại màn hình tự nhập vào trường screen của Option
+    fromData.append("screen", selectedIntegrity === "Đã thay màn" ? (value.screen_replaced_type ?? "") : "");
+
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity);
@@ -567,10 +590,12 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
       closable={() => {
         close();
         form.resetFields();
+        setSelectedIntegrity("");
       }}
       onCancel={() => {
         close();
         form.resetFields();
+        setSelectedIntegrity("");
       }}
     >
       <Flex vertical className="p-4 mx-auto my-auto mt-3" style={{ flex: 1 }}>
@@ -645,7 +670,16 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
 
             <Col span={12}>
               <Form.Item label={"Tình trạng máy"} name={"is_original"}>
-                <Select placeholder="Chọn tình trạng máy" className="w-full">
+                <Select
+                  placeholder="Chọn tình trạng máy"
+                  className="w-full"
+                  onChange={(v) => {
+                    setSelectedIntegrity(v);
+                    if (v !== "Đã thay màn") {
+                      form.setFieldValue("screen_replaced_type", undefined);
+                    }
+                  }}
+                >
                   <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
                   <Select.Option value="Đã thay màn">Đã thay màn</Select.Option>
                   <Select.Option value="Đã thay pin">Đã thay pin</Select.Option>
@@ -653,16 +687,23 @@ const ContentDialogOption = ({ open, urlApi, method, productId, close }) => {
               </Form.Item>
             </Col>
 
-            <Col span={12}>
-              <Form.Item label={"Màn hình"} name={"screen"}>
-                <Input
-                  placeholder="Ví dụ: 6.1"
-                  addonAfter="inch"
-                  size="middle"
-                  className="w-full"
-                />
-              </Form.Item>
-            </Col>
+            {selectedIntegrity === "Đã thay màn" && (
+              <Col span={12}>
+                <Form.Item
+                  label={"Loại màn hình thay thế"}
+                  name={"screen_replaced_type"}
+                  rules={[{ required: true, message: "Vui lòng nhập loại màn hình thay thế" }]}
+                  tooltip="Nhập mô tả màn hình đã thay, ví dụ: Màn GX, Màn linh kiện, Màn zin ép kính..."
+                >
+                  <Input
+                    placeholder="VD: Màn GX, Màn zin ép kính, Màn linh kiện..."
+                    size="middle"
+                    className="w-full"
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+            )}
 
             <Col span={12}>
               <Form.Item name="image" label="Ảnh option">

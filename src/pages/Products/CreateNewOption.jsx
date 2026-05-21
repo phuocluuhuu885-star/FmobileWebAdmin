@@ -18,6 +18,7 @@ const CreateNewOption = ({ productId }) => {
   const [form] = Form.useForm();
   const [image, setImage] = useState(null);
   const [existingColors, setExistingColors] = useState([]);
+  const [selectedIntegrity, setSelectedIntegrity] = useState("");
   const token = Cookies.get("token");
 
   React.useEffect(() => {
@@ -47,8 +48,11 @@ const CreateNewOption = ({ productId }) => {
     fromData.append("storage_capacity", value.storage_capacity ?? "");
     fromData.append("condition_percent", value.condition_percent ?? "");
     fromData.append("battery_health", value.battery_health ?? "");
+    
     fromData.append("is_original", value.is_original ?? "");
-    fromData.append("screen", value.screen ? `${value.screen} inch` : "");
+    // Nếu chọn "Đã thay màn", lưu loại màn hình tự nhập vào trường screen của Option
+    fromData.append("screen", selectedIntegrity === "Đã thay màn" ? (value.screen_replaced_type ?? "") : "");
+    
     // Ẩn giảm giá trên UI, mặc định gửi 0
     fromData.append("discount_value", 0);
     fromData.append("quantity", value.quantity ?? 0);
@@ -63,6 +67,7 @@ const CreateNewOption = ({ productId }) => {
       )
       .then((res) => {
         form.resetFields();
+        setSelectedIntegrity("");
         notification.success({
           message: "success",
           description: "Tạo option thành công",
@@ -156,7 +161,16 @@ const CreateNewOption = ({ productId }) => {
 
             <Col span={12}>
               <Form.Item label={"Tình trạng máy"} name={"is_original"}>
-                <Select placeholder="Chọn tình trạng máy" className="w-full">
+                <Select
+                  placeholder="Chọn tình trạng máy"
+                  className="w-full"
+                  onChange={(v) => {
+                    setSelectedIntegrity(v);
+                    if (v !== "Đã thay màn") {
+                      form.setFieldValue("screen_replaced_type", undefined);
+                    }
+                  }}
+                >
                   <Select.Option value="Zin nguyên bản">Zin nguyên bản</Select.Option>
                   <Select.Option value="Đã thay màn">Đã thay màn</Select.Option>
                   <Select.Option value="Đã thay pin">Đã thay pin</Select.Option>
@@ -164,16 +178,23 @@ const CreateNewOption = ({ productId }) => {
               </Form.Item>
             </Col>
 
-            <Col span={12}>
-              <Form.Item label={"Màn hình"} name={"screen"}>
-                <Input
-                  placeholder="Ví dụ: 6.1"
-                  addonAfter="inch"
-                  size="middle"
-                  className="w-full"
-                />
-              </Form.Item>
-            </Col>
+            {selectedIntegrity === "Đã thay màn" && (
+              <Col span={12}>
+                <Form.Item
+                  label={"Loại màn hình thay thế"}
+                  name={"screen_replaced_type"}
+                  rules={[{ required: true, message: "Vui lòng nhập loại màn hình thay thế" }]}
+                  tooltip="Nhập mô tả màn hình đã thay, ví dụ: Màn GX, Màn linh kiện, Màn zin ép kính..."
+                >
+                  <Input
+                    placeholder="VD: Màn GX, Màn zin ép kính, Màn linh kiện..."
+                    size="middle"
+                    className="w-full"
+                    allowClear
+                  />
+                </Form.Item>
+              </Col>
+            )}
 
             <Col span={12}>
               <Form.Item label={"Giá tiền"} name={"price"}>
